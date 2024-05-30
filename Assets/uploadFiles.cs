@@ -9,7 +9,8 @@ public class uploadFiles : MonoBehaviour
     public GameObject button2 ; 
     public GameObject Buttons ;
     public void clicked(){
-        button1.SetActive(false) ;
+        button1.SetActive(false) ;   
+        
         button2.SetActive(false) ; 
         Buttons.SetActive(true) ; 
     }
