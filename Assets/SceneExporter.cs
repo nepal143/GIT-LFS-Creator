@@ -6,7 +6,7 @@ public class SceneExporter : MonoBehaviour
     public void ExportSceneToPackage()
     {
         // Define the path for the exported package
-        string packagePath = "Assets/ExportedScene.unitypackage";
+        string packagePath = "Assets/MyExports/ExportedScene.unitypackage";
 
         // Find all root objects in the scene
         GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();

@@ -16,6 +16,8 @@ public class SceneCleaner : MonoBehaviour
 
         // Create a set of objects to remove for faster lookup
         HashSet<GameObject> objectsToRemoveSet = new HashSet<GameObject>(objectsToRemove);
+        GameObject tempCam = GameObject.FindGameObjectWithTag("tempCam");
+        Destroy(tempCam) ; 
 
         // Remove specific objects
         foreach (GameObject obj in allObjects)

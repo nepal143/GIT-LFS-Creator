@@ -1023,7 +1023,7 @@ GameObject:
   - component: {fileID: 348929667}
   m_Layer: 0
   m_Name: spawnForDollHouse
-  m_TagString: Untagged
+  m_TagString: SpawnDoll
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2796,7 +2796,7 @@ GameObject:
   - component: {fileID: 763295609}
   m_Layer: 0
   m_Name: spawn point
-  m_TagString: Untagged
+  m_TagString: SpawnPanaroma
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2876,6 +2876,8 @@ MonoBehaviour:
   Buttons: {fileID: 1681294729}
   ImageGridContainer: {fileID: 56283779}
   PanaromaCompleteText: {fileID: 1871345510}
+  FinalSaveScene: {fileID: 1483559945}
+  AddDollHoues: {fileID: 1273998483}
 --- !u!114 &771303172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3327,12 +3329,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movementButtons: {fileID: 1225024899}
   RotationButtons: {fileID: 1729935269}
-  mainCanvas: {fileID: 1617179900}
+  mainCanvas: {fileID: 1561940508}
   DollHouseCanvas: {fileID: 260231714}
   AddDollHouseButton: {fileID: 1273998483}
   FinalSaveScreen: {fileID: 1483559945}
   DollHouseCamera: {fileID: 777089649}
-  MainCamear: {fileID: 1617179900}
+  MainCamera: {fileID: 1617179900}
+  AddPanaroma: {fileID: 2014067535}
 --- !u!114 &822595779
 MonoBehaviour:
   m_ObjectHideFlags: 0

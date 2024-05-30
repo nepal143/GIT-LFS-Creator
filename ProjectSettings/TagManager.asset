@@ -9,6 +9,8 @@ TagManager:
   - TempCanvas
   - SphereCamera
   - DollHouse
+  - SpawnDoll
+  - SpawnPanaroma
   layers:
   - Default
   - TransparentFX
