@@ -12,9 +12,9 @@ public class saveAndBackInMovementDollHouse : MonoBehaviour
     public GameObject DollHouseCanvas ; 
     public GameObject AddDollHouseButton ; 
     public GameObject FinalSaveScreen ; 
-
     public GameObject DollHouseCamera ; 
-    public GameObject MainCamear ; 
+    public GameObject MainCamera ; 
+    public GameObject AddPanaroma ; 
 
     public void Save(){
         if(!movementButtons.activeSelf){
@@ -22,10 +22,21 @@ public class saveAndBackInMovementDollHouse : MonoBehaviour
             RotationButtons.SetActive(false) ;
         }
         else{
+            if(!AddPanaroma.activeSelf){
             movementButtons.SetActive(false);
             FinalSaveScreen.SetActive(true) ; 
             DollHouseCanvas.SetActive(false) ;
-            MainCamear.SetActive(true) ; 
+            MainCamera.SetActive(true) ; 
+
+            }
+            else{
+                    mainCanvas.SetActive(true);
+                    DollHouseCanvas.SetActive(false);
+                    mainCanvas.SetActive(true) ;
+                    MainCamera.gameObject.SetActive(true);
+                    DollHouseCamera.gameObject.SetActive(true);
+                    AddDollHouseButton.SetActive(false);
+            }
         }
     }
 

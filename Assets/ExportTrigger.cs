@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+
 
 public class ExportButtonController : MonoBehaviour
 {
@@ -22,6 +24,10 @@ public class ExportButtonController : MonoBehaviour
         {
             sceneCleaner.CleanScene();
             ExportSceneToPackage();
+            //  int currentIndex = SceneManager.GetActiveScene().buildIndex;
+            // int previousIndex = (currentIndex + 1) % SceneManager.sceneCountInBuildSettings;
+            SceneManager.LoadScene(0);
+            
         }
         else
         {

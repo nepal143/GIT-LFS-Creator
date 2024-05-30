@@ -13,16 +13,28 @@ public class PanaromaSave : MonoBehaviour
     public GameObject Buttons;
     public GameObject ImageGridContainer ; 
     public GameObject PanaromaCompleteText ;
+    public GameObject FinalSaveScene ; 
+    public GameObject AddDollHoues ;
 
     public void OnClickSave()
     {
-        MainCamera.SetActive(true);
+        
+        GameObject dollHouse = GameObject.FindGameObjectWithTag("DollHouse");
+
         tempCanvas.SetActive(false);
-        MainCanvas.SetActive(true);
+        MainCamera.SetActive(true);
         AddPanaromaButton.SetActive(false);
+        if(!dollHouse)
+        {
         button2.SetActive(true);
+        MainCanvas.SetActive(true);
         Buttons.SetActive(false);
         ImageGridContainer.SetActive(false) ; 
         PanaromaCompleteText.SetActive(true) ; 
+
+        }
+        else{
+            FinalSaveScene.SetActive(true) ; 
+        }
     }
 }
