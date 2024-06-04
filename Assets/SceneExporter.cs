@@ -7,19 +7,19 @@ public class SceneExporter : MonoBehaviour
     {
         // Define the path for the exported package
         string packagePath = "Assets/MyExports/ExportedScene.unitypackage";
+        
+        // Get the path of the current active scene
+        string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
 
-        // Find all root objects in the scene
-        GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
-
-        // Collect the paths of all root objects
-        string[] assetPaths = new string[rootObjects.Length];
-        for (int i = 0; i < rootObjects.Length; i++)
+        // Check if the scene is saved, as unsaved scenes cannot be exported
+        if (string.IsNullOrEmpty(scenePath))
         {
-            assetPaths[i] = AssetDatabase.GetAssetPath(rootObjects[i]);
+            Debug.LogError("The scene needs to be saved before exporting.");
+            return;
         }
 
-        // Export the scene objects to a package
-        AssetDatabase.ExportPackage(assetPaths, packagePath, ExportPackageOptions.IncludeDependencies | ExportPackageOptions.Recurse);
+        // Export the scene and its dependencies to a package
+        AssetDatabase.ExportPackage(new string[] { scenePath }, packagePath, ExportPackageOptions.IncludeDependencies | ExportPackageOptions.Recurse);
 
         Debug.Log("Scene exported to " + packagePath);
     }
