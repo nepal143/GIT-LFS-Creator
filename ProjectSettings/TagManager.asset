@@ -11,6 +11,8 @@ TagManager:
   - DollHouse
   - SpawnDoll
   - SpawnPanaroma
+  - Image
+  - Hotspot
   layers:
   - Default
   - TransparentFX
