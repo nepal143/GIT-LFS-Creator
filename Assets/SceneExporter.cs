@@ -1,79 +1,65 @@
 using UnityEngine;
+using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
 
-public class ExportObjects : MonoBehaviour
+public class SceneStateExporter : MonoBehaviour
 {
-    public string exportFileName = "ExportedSceneData.json";
+    public string exportFolderPath = "Assets/MyExports";
+    public string exportFileName = "ExportedScene.unitypackage";
 
-    public void ExportSelectedObjects()
+    public void ExportSceneState()
     {
-        // Define the path for the exported data
-        string exportPath = Path.Combine(Application.persistentDataPath, exportFileName);
+        // Ensure the export directory exists
+        if (!AssetDatabase.IsValidFolder(exportFolderPath))
+        {
+            AssetDatabase.CreateFolder("Assets", "MyExports");
+        }
 
-        // Collect the objects to export
-        List<ObjectData> objectDataList = new List<ObjectData>();
+        // Collect the paths of the objects to export
+        List<string> assetPaths = new List<string>();
 
         // Collect images
-        GameObject[] images = GameObject.FindGameObjectsWithTag("Image");
-        foreach (GameObject image in images)
-        {
-            ObjectData data = new ObjectData(image);
-            objectDataList.Add(data);
-        }
+        SaveObjectsWithTag("Image", assetPaths);
 
         // Collect hotspots
-        GameObject[] hotspots = GameObject.FindGameObjectsWithTag("Hotspot");
-        foreach (GameObject hotspot in hotspots)
-        {
-            ObjectData data = new ObjectData(hotspot);
-            objectDataList.Add(data);
-        }
+        SaveObjectsWithTag("Hotspot", assetPaths);
 
-        // Collect dollhouse model (assuming it's tagged as "Dollhouse")
-        GameObject dollhouse = GameObject.FindGameObjectWithTag("Dollhouse");
-        if (dollhouse != null)
-        {
-            ObjectData data = new ObjectData(dollhouse);
-            objectDataList.Add(data);
-        }
+        // Collect dollhouse model
+        SaveObjectsWithTag("DollHouse", assetPaths);
 
-        // Serialize the object data to JSON
-        string json = JsonUtility.ToJson(new ObjectDataCollection(objectDataList), true);
+        // Export the selected objects to a package
+        string packagePath = Path.Combine(exportFolderPath, exportFileName);
+        AssetDatabase.ExportPackage(assetPaths.ToArray(), packagePath, ExportPackageOptions.IncludeDependencies | ExportPackageOptions.Recurse);
 
-        // Save the JSON to a file
-        File.WriteAllText(exportPath, json);
-
-        Debug.Log("Selected objects exported to " + exportPath);
+        Debug.Log("Selected objects exported to " + packagePath);
     }
-}
 
-[System.Serializable]
-public class ObjectData
-{
-    public string name;
-    public string tag;
-    public Vector3 position;
-    public Quaternion rotation;
-    public Vector3 scale;
-
-    public ObjectData(GameObject obj)
+    private void SaveObjectsWithTag(string tag, List<string> assetPaths)
     {
-        name = obj.name;
-        tag = obj.tag;
-        position = obj.transform.position;
-        rotation = obj.transform.rotation;
-        scale = obj.transform.localScale;
+        GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
+        foreach (GameObject obj in objects)
+        {
+            string assetPath = SaveObjectAsPrefab(obj);
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                assetPaths.Add(assetPath);
+            }
+        }
     }
-}
 
-[System.Serializable]
-public class ObjectDataCollection
-{
-    public List<ObjectData> objectDataList;
-
-    public ObjectDataCollection(List<ObjectData> dataList)
+    private string SaveObjectAsPrefab(GameObject obj)
     {
-        objectDataList = dataList;
+        string path = Path.Combine(exportFolderPath, obj.name + ".prefab");
+        Object prefab = PrefabUtility.SaveAsPrefabAsset(obj, path);
+        if (prefab != null)
+        {
+            return path;
+        }
+        else
+        {
+            Debug.LogError("Failed to save prefab for " + obj.name);
+            return null;
+        }
     }
 }
