@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 1877386289849627869}
   m_Layer: 0
   m_Name: panaromaShift
-  m_TagString: SphereCamera
+  m_TagString: RunTime
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -148,4 +148,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e37058171230424a8d88f490e386e91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCamera: {fileID: 8807871587576582282, guid: d8c9c8276ac5bdc4989807881885f950, type: 3}
