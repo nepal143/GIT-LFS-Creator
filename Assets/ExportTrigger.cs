@@ -4,7 +4,8 @@ using UnityEngine.UI;
 public class ExportButtonController : MonoBehaviour
 {
     public Button exportButton;
-    public SceneStateExporter exportObjectsScript;
+    public SceneStateExport.SceneExporter exportObjectsScript;
+    public SceneCleaner sceneCleanerObject;
 
     void Start()
     {
@@ -22,7 +23,8 @@ public class ExportButtonController : MonoBehaviour
     {
         if (exportObjectsScript != null)
         {
-            exportObjectsScript.ExportSceneState();
+            // sceneCleanerObject.CleanScene() ;
+            exportObjectsScript.ExportRootObject();
         }
         else
         {
@@ -30,3 +32,4 @@ public class ExportButtonController : MonoBehaviour
         }
     }
 }
+      

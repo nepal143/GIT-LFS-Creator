@@ -13,6 +13,7 @@ TagManager:
   - SpawnPanaroma
   - Image
   - Hotspot
+  - RunTime
   layers:
   - Default
   - TransparentFX

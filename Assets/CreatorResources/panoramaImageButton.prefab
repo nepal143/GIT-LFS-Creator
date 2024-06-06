@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 1389220577023347572}
   m_Layer: 5
   m_Name: panoramaImageButton
-  m_TagString: Untagged
+  m_TagString: RunTime
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
