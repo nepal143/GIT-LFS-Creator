@@ -4517,7 +4517,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   exportButton: {fileID: 1273553042}
   exportObjectsScript: {fileID: 1435362301}
-  sceneCleanerObject: {fileID: 0}
+  sceneCleanerObject: {fileID: 1435362299}
 --- !u!1 &1461375589
 GameObject:
   m_ObjectHideFlags: 0

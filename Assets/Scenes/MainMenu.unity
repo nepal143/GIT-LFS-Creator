@@ -413,37 +413,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1016774536
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1016774537}
-  m_Layer: 0
-  m_Name: Twilio
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1016774537
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1016774536}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 806.12177, y: -53.50586, z: 3222.2595}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1040383491
 GameObject:
   m_ObjectHideFlags: 0
@@ -990,6 +959,7 @@ GameObject:
   - component: {fileID: 2039405709}
   - component: {fileID: 2039405708}
   - component: {fileID: 2039405707}
+  - component: {fileID: 2039405711}
   - component: {fileID: 2039405710}
   m_Layer: 5
   m_Name: 'CreateScene '
@@ -1062,6 +1032,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
+      - m_Target: {fileID: 2039405711}
+        m_TargetAssemblyTypeName: DeleteFolders, Assembly-CSharp
+        m_MethodName: DeleteSpecifiedFolders
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
       - m_Target: {fileID: 2039405710}
         m_TargetAssemblyTypeName: NextSceneLoader, Assembly-CSharp
         m_MethodName: LoadNextScene
@@ -1124,6 +1106,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b473abc785060949ae17a913d4c90dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2039405711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2039405705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6abfbf83c48c02744abca0bbeab3314f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deleteButton: {fileID: 2039405707}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1132,4 +1127,3 @@ SceneRoots:
   - {fileID: 638758249}
   - {fileID: 1266464804}
   - {fileID: 1379350908}
-  - {fileID: 1016774537}
