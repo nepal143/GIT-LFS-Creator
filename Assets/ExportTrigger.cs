@@ -23,7 +23,7 @@ public class ExportButtonController : MonoBehaviour
     {
         if (exportObjectsScript != null)
         {
-            // sceneCleanerObject.CleanScene() ;
+            sceneCleanerObject.CleanScene() ;
             exportObjectsScript.ExportRootObject();
         }
         else
