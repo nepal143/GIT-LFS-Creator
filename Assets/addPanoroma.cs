@@ -60,29 +60,30 @@ public class ImageUploader : MonoBehaviour
         Debug.Log("Permission result: " + permission);
     }
 
-    private string CopyImageToAssets(string originalPath)
+   private string CopyImageToAssets(string originalPath)
+{
+    // Construct the destination file name with a number suffix
+    string destinationFileName = (uploadedTextures.Count + 1).ToString() + ".png";
+    string destinationPath = Path.Combine(assetsImageFolder, destinationFileName);
+
+    if (!Directory.Exists(assetsImageFolder))
     {
-        string fileName = Path.GetFileName(originalPath);
-        string destinationPath = Path.Combine(assetsImageFolder, fileName);
-
-        if (!Directory.Exists(assetsImageFolder))
-        {
-            Directory.CreateDirectory(assetsImageFolder);
-            AssetDatabase.Refresh();
-        }
-
-        try
-        {
-            File.Copy(originalPath, destinationPath, true);
-            AssetDatabase.ImportAsset(destinationPath);
-            return destinationPath;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Error copying image to Assets folder: " + ex.Message);
-            return null;
-        }
+        Directory.CreateDirectory(assetsImageFolder);
+        AssetDatabase.Refresh();
     }
+
+    try
+    {
+        File.Copy(originalPath, destinationPath, true);
+        AssetDatabase.ImportAsset(destinationPath);
+        return destinationPath;
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError("Error copying image to Assets folder: " + ex.Message);
+        return null;
+    }
+}
 
     public void DisplayImage(Texture2D texture)
     {
