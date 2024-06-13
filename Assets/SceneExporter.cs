@@ -1,15 +1,16 @@
 using UnityEngine;
-using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
+using System.IO.Compression; // For ZipArchive
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SceneStateExport
 {
     public class SceneExporter : MonoBehaviour
     {
         public GameObject rootObject;
-        public string exportFolderPath = "Assets/MyExports";
-        public string exportFileName = "ExportedScene.unitypackage";
+        public string exportFolderPath = "MyExports";
+        public string exportFileName = "ExportedScene.zip";
 
         public void ExportRootObject()
         {
@@ -20,9 +21,10 @@ namespace SceneStateExport
             }
 
             // Ensure the export directory exists
-            if (!AssetDatabase.IsValidFolder(exportFolderPath))
+            string fullExportFolderPath = Path.Combine(Application.persistentDataPath, exportFolderPath);
+            if (!Directory.Exists(fullExportFolderPath))
             {
-                AssetDatabase.CreateFolder("Assets", "MyExports");
+                Directory.CreateDirectory(fullExportFolderPath);
             }
 
             // Find the DollHouse object by its tag
@@ -76,26 +78,19 @@ namespace SceneStateExport
             }
 
             // Export the prefabs to a package
-            string packagePath = Path.Combine(exportFolderPath, exportFileName);
-            AssetDatabase.ExportPackage(new string[] { rootPrefabPath, dollHousePrefabPath }, packagePath, ExportPackageOptions.IncludeDependencies | ExportPackageOptions.Recurse);
+            string packagePath = Path.Combine(fullExportFolderPath, exportFileName);
+            CreateZipPackage(packagePath, new string[] { rootPrefabPath, dollHousePrefabPath });
 
             Debug.Log("Root object and DollHouse exported to " + packagePath);
         }
 
         private string SaveObjectAsPrefab(GameObject obj, string prefabName)
         {
-            string path = Path.Combine(exportFolderPath, prefabName + ".prefab");
-            Object prefab = PrefabUtility.SaveAsPrefabAsset(obj, path);
-
-            if (prefab != null)
-            {
-                return path;
-            }
-            else
-            {
-                Debug.LogError("Failed to save prefab for " + prefabName);
-                return null;
-            }
+            string path = Path.Combine(Application.persistentDataPath, exportFolderPath, prefabName + ".prefab");
+            // Here you can save the object in a format you prefer, using JSON or other methods.
+            // As an example, we'll just create an empty file to represent the prefab.
+            File.WriteAllText(path, "Prefab data for " + prefabName);
+            return path;
         }
 
         private void SaveRuntimeAssets(GameObject obj)
@@ -115,17 +110,20 @@ namespace SceneStateExport
         {
             if (mesh == null) return;
 
-            string path = Path.Combine(exportFolderPath, objName + "_Mesh.asset");
+            string path = Path.Combine(Application.persistentDataPath, exportFolderPath, objName + "_Mesh.asset");
+            // Serialize the mesh data to a file
+            byte[] meshData = MeshToBytes(mesh);
+            File.WriteAllBytes(path, meshData);
+        }
 
-            // Check if the asset already exists
-            Mesh existingMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (existingMesh == null)
+        private byte[] MeshToBytes(Mesh mesh)
+        {
+            // Serialize the mesh to a byte array
+            using (MemoryStream stream = new MemoryStream())
             {
-                AssetDatabase.CreateAsset(mesh, path);
-            }
-            else
-            {
-                Debug.Log("Mesh asset already exists: " + path);
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, mesh);
+                return stream.ToArray();
             }
         }
 
@@ -135,36 +133,46 @@ namespace SceneStateExport
             {
                 if (material == null || material.name == "Default-Material") continue; // Skip default material
 
-                // Create a copy of the material to avoid modifying the original shared material
-                Material newMaterial = new Material(material);
+                string path = Path.Combine(Application.persistentDataPath, exportFolderPath, objName + "_Material_" + material.name + ".mat");
+                // Serialize the material data to a file
+                byte[] materialData = MaterialToBytes(material);
+                File.WriteAllBytes(path, materialData);
 
-                // Save the texture if it's not already an asset
-                if (newMaterial.mainTexture != null && !AssetDatabase.Contains(newMaterial.mainTexture))
+                if (material.mainTexture != null)
                 {
-                    string texturePath = Path.Combine(exportFolderPath, objName + "_Texture_" + newMaterial.mainTexture.name + ".asset");
-                    Texture existingTexture = AssetDatabase.LoadAssetAtPath<Texture>(texturePath);
-                    if (existingTexture == null)
-                    {
-                        AssetDatabase.CreateAsset(newMaterial.mainTexture, texturePath);
-                        newMaterial.mainTexture = AssetDatabase.LoadAssetAtPath<Texture>(texturePath);
-                    }
-                    else
-                    {
-                        Debug.Log("Texture asset already exists: " + texturePath);
-                        newMaterial.mainTexture = existingTexture;
-                    }
+                    string texturePath = Path.Combine(Application.persistentDataPath, exportFolderPath, objName + "_Texture_" + material.mainTexture.name + ".asset");
+                    byte[] textureData = TextureToBytes((Texture2D)material.mainTexture);
+                    File.WriteAllBytes(texturePath, textureData);
                 }
+            }
+        }
 
-                // Create asset for the new material
-                string materialPath = Path.Combine(exportFolderPath, objName + "_Material_" + newMaterial.name + ".mat");
-                Material existingMaterial = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-                if (existingMaterial == null)
+        private byte[] MaterialToBytes(Material material)
+        {
+            // Serialize the material to a byte array
+            using (MemoryStream stream = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, material);
+                return stream.ToArray();
+            }
+        }
+
+        private byte[] TextureToBytes(Texture2D texture)
+        {
+            return texture.EncodeToPNG();
+        }
+
+        private void CreateZipPackage(string zipPath, string[] filePaths)
+        {
+            using (FileStream zipToOpen = new FileStream(zipPath, FileMode.Create))
+            {
+                using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Create))
                 {
-                    AssetDatabase.CreateAsset(newMaterial, materialPath);
-                }
-                else
-                {
-                    Debug.Log("Material asset already exists: " + materialPath);
+                    foreach (string filePath in filePaths)
+                    {
+                        archive.CreateEntryFromFile(filePath, Path.GetFileName(filePath));
+                    }
                 }
             }
         }
