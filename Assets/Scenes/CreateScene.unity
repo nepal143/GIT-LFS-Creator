@@ -4528,7 +4528,7 @@ MonoBehaviour:
   DollHouseRotationCanvas: {fileID: 260231714}
   mainCamera: {fileID: 1617179902}
   DollHouseCamera: {fileID: 777089651}
-  loadingPanel: {fileID: 0}
+  loadingPanel: {fileID: 781907555}
   loadingTextTMP: {fileID: 323135711}
 --- !u!1 &1329887346
 GameObject:

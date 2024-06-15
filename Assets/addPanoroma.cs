@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.Networking;
 using System.IO.Compression;
-using System.Windows.Forms;
+using SFB; // Standalone File Browser namespace
 
 public class ImageUploader : MonoBehaviour
 {
@@ -27,75 +27,81 @@ public class ImageUploader : MonoBehaviour
     private string resourcesImageFolder = "ImportedImages";
 
     void Start()
-{
-    uploadButton.onClick.AddListener(UploadImage);
-    nextButton.onClick.AddListener(() => CreatePanoramaSpheres(parent.transform));
-
-    // Print the persistent data path
-    Debug.Log("Persistent Data Path: " + UnityEngine.Application.persistentDataPath);
-
-    // Ensure the ImportedImages folder exists
-    string path = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder);
-    if (!Directory.Exists(path))
     {
-        Directory.CreateDirectory(path);
-        Debug.Log("ImportedImages directory created at: " + path);
-    }
-    else
-    {
-        Debug.Log("ImportedImages directory already exists at: " + path);
-    }
-}
+        uploadButton.onClick.AddListener(UploadImage);
+        nextButton.onClick.AddListener(() => CreatePanoramaSpheres(parent.transform));
 
-    public void UploadImage()
-    {
-        OpenFileDialog openFileDialog = new OpenFileDialog();
-        openFileDialog.Filter = "PNG files (*.png)|*.png";
-        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        // Print the persistent data path
+        Debug.Log("Persistent Data Path: " + UnityEngine.Application.persistentDataPath);
+
+        // Ensure the ImportedImages folder exists
+        string path = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder);
+        if (!Directory.Exists(path))
         {
-            string path = openFileDialog.FileName;
-            string destinationPath = CopyImageToPersistentDataPath(path);
-            if (!string.IsNullOrEmpty(destinationPath))
-            {
-                StartCoroutine(LoadTextureFromFile(destinationPath));
-            }
-            else
-            {
-                Debug.LogError("Failed to copy image to persistent data path!");
-            }
+            Directory.CreateDirectory(path);
+            Debug.Log("ImportedImages directory created at: " + path);
+        }
+        else
+        {
+            Debug.Log("ImportedImages directory already exists at: " + path);
         }
     }
 
-   private string CopyImageToPersistentDataPath(string originalPath)
+public void UploadImage()
 {
-    string destinationFileName = (uploadedTextures.Count + 1).ToString() + ".png";
-    string destinationPath = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder, destinationFileName);
+    var extensions = new[] {
+        new ExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp", "gif"),
+        new ExtensionFilter("All Files", "*"),
+    };
+    string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Image File", "", extensions, false);
 
-    string folderPath = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder);
-    Debug.Log("Creating directory at: " + folderPath);
-    if (!Directory.Exists(folderPath))
+    if (paths != null && paths.Length > 0)
     {
-        Directory.CreateDirectory(folderPath);
-        Debug.Log("Directory created.");
+        string path = paths[0];
+        string destinationPath = CopyImageToPersistentDataPath(path);
+        if (!string.IsNullOrEmpty(destinationPath))
+        {
+            StartCoroutine(LoadTextureFromFile(destinationPath));
+        }
+        else
+        {
+            Debug.LogError("Failed to copy image to persistent data path!");
+        }
     }
     else
     {
-        Debug.Log("Directory already exists.");
-    }
-
-    try
-    {
-        File.Copy(originalPath, destinationPath, true);
-        Debug.Log("Image copied to: " + destinationPath);
-        return destinationPath;
-    }
-    catch (System.Exception ex)
-    {
-        Debug.LogError("Error copying image to persistent data path: " + ex.Message);
-        return null;
+        Debug.Log("No file selected.");
     }
 }
+    private string CopyImageToPersistentDataPath(string originalPath)
+    {
+        string destinationFileName = (uploadedTextures.Count + 1).ToString() + ".png";
+        string destinationPath = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder, destinationFileName);
 
+        string folderPath = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder);
+        Debug.Log("Creating directory at: " + folderPath);
+        if (!Directory.Exists(folderPath))
+        {
+            Directory.CreateDirectory(folderPath);
+            Debug.Log("Directory created.");
+        }
+        else
+        {
+            Debug.Log("Directory already exists.");
+        }
+
+        try
+        {
+            File.Copy(originalPath, destinationPath, true);
+            Debug.Log("Image copied to: " + destinationPath);
+            return destinationPath;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Error copying image to persistent data path: " + ex.Message);
+            return null;
+        }
+    }
 
     private IEnumerator LoadTextureFromFile(string path)
     {

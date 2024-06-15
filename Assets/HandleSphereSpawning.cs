@@ -13,7 +13,7 @@ public class SphereGenerator : MonoBehaviour
             GenerateSphere();
         }
     }
-
+   
     void GenerateSphere()
     {
         GameObject cameraObject = GameObject.FindGameObjectWithTag(cameraTagName);

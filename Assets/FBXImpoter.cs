@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.IO;
-using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
 using Dummiesman; // Ensure this namespace is available
 using TMPro; // Include TextMeshPro namespace
@@ -20,6 +19,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public GameObject loadingPanel;
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
+    private Shader standardShader;
+
     void Start()
     {
         if (importButton != null)
@@ -35,6 +36,17 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         if (loadingTextTMP != null)
         {
             loadingTextTMP.gameObject.SetActive(false);
+        }
+
+        // Load the standard shader
+        standardShader = Shader.Find("Standard");
+        if (standardShader == null)
+        {
+            Debug.LogError("Standard shader not found. Ensure it is included in the build.");
+        }
+        else
+        {
+            Debug.Log("Standard shader loaded successfully.");
         }
     }
 
@@ -80,6 +92,9 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         GameObject objModel = new OBJLoader().Load(path);
         if (objModel != null)
         {
+            Debug.Log("OBJ model loaded successfully.");
+            ApplyShaderToModel(objModel, standardShader);
+
             GameObject instantiatedModel = Instantiate(objModel, spawnPoint.position, spawnPoint.rotation);
             instantiatedModel.tag = dollHouseTag;
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
@@ -91,6 +106,25 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         HideLoading();
+    }
+
+    void ApplyShaderToModel(GameObject model, Shader shader)
+    {
+        if (shader == null)
+        {
+            Debug.LogError("Shader is null. Cannot apply shader to model.");
+            return;
+        }
+
+        Renderer[] renderers = model.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
+        {
+            foreach (Material material in renderer.materials)
+            {
+                material.shader = shader;
+            }
+        }
+        Debug.Log("Shader applied to model successfully.");
     }
 
     bool IsValidPath(string path)
@@ -112,6 +146,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         DollHouseRotationCanvas.SetActive(true);
         mainCamera.gameObject.SetActive(false);
         DollHouseCamera.gameObject.SetActive(true);
+        Debug.Log("Screen changed to DollHouse.");
     }
 
     void ShowLoading(string message)
