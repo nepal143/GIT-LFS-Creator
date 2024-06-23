@@ -20,6 +20,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public GameObject loadingPanel;
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
+    private string baseUrl = "http://localhost:3000/user"; // Adjust base URL as needed
+
     void Start()
     {
         if (importButton != null)
@@ -80,9 +82,15 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         GameObject objModel = new OBJLoader().Load(path);
         if (objModel != null)
         {
+            // Instantiate the OBJ model
             GameObject instantiatedModel = Instantiate(objModel, spawnPoint.position, spawnPoint.rotation);
             instantiatedModel.tag = dollHouseTag;
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
+
+            // Upload OBJ model to MongoDB
+            yield return UploadToMongoDB(path);
+
+            // Change screen to DollHouse mode
             ChangeScreenForDollHouse();
         }
         else
@@ -91,6 +99,31 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         HideLoading();
+    }
+
+    IEnumerator UploadToMongoDB(string filePath)
+    {
+        byte[] objModelData = File.ReadAllBytes(filePath); // Read OBJ model bytes
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}/upload-obj", "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(objModelData);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/octet-stream");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+            }
+            else
+            {
+                Debug.Log("OBJ model uploaded to MongoDB.");
+                string responseText = request.downloadHandler.text;
+                Debug.Log("Server response: " + responseText);
+            }
+        }
     }
 
     bool IsValidPath(string path)
@@ -141,3 +174,4 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
     }
 }
+       
