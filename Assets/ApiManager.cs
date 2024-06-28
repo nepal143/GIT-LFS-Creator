@@ -6,7 +6,7 @@ using TMPro;
 
 public class APIManager : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/user";
+    private string baseUrl = "https://theserver-tp6r.onrender.com/";
     private string userId; // Store the user ID
 
     public void RegisterUser(string username, string phoneNumber, string password, Action<string> callback)

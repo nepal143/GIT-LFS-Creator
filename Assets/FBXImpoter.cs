@@ -20,7 +20,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public GameObject loadingPanel;
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
-    private string baseUrl = "http://localhost:3000/user"; // Adjust base URL as needed
+    private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
 
     void Start()
     {
@@ -87,8 +87,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             instantiatedModel.tag = dollHouseTag;
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
 
-            // Upload OBJ model to MongoDB
-            yield return UploadToMongoDB(path);
+            // Upload OBJ model to AWS S3
+            // yield return UploadToS3(path);
 
             // Change screen to DollHouse mode
             ChangeScreenForDollHouse();
@@ -101,30 +101,28 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         HideLoading();
     }
 
-    IEnumerator UploadToMongoDB(string filePath)
-    {
-        byte[] objModelData = File.ReadAllBytes(filePath); // Read OBJ model bytes
+// IEnumerator UploadToS3(string filePath)
+// {
+//     byte[] objModelData = File.ReadAllBytes(filePath);
+//     WWWForm form = new WWWForm();
+//     form.AddBinaryData("file", objModelData, Path.GetFileName(filePath), "application/octet-stream");
 
-        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}/upload-obj", "POST"))
-        {
-            request.uploadHandler = new UploadHandlerRaw(objModelData);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/octet-stream");
+//     using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:3000/upload", form))
+//     {
+//         yield return request.SendWebRequest();
 
-            yield return request.SendWebRequest();
+//         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+//         {
+//             Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
+//         }
+//         else
+//         {
+//             Debug.Log("OBJ model uploaded to S3.");
+//             Debug.Log("Response: " + request.downloadHandler.text);
+//         }
+//     }
+// }
 
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError(request.error);
-            }
-            else
-            {
-                Debug.Log("OBJ model uploaded to MongoDB.");
-                string responseText = request.downloadHandler.text;
-                Debug.Log("Server response: " + responseText);
-            }
-        }
-    }
 
     bool IsValidPath(string path)
     {
@@ -174,4 +172,3 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
     }
 }
-       
