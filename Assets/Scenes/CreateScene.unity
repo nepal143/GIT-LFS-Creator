@@ -1678,9 +1678,9 @@ RectTransform:
   - {fileID: 399473955}
   m_Father: {fileID: 432085879}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 459.7238, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 63.038208}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &498876278
@@ -4298,6 +4298,7 @@ GameObject:
   - component: {fileID: 1273553044}
   - component: {fileID: 1273553043}
   - component: {fileID: 1273553042}
+  - component: {fileID: 1273553046}
   m_Layer: 5
   m_Name: SaveAndExport
   m_TagString: Untagged
@@ -4349,13 +4350,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1435362298}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 1273553046}
+        m_TargetAssemblyTypeName: SaveToAWS, Assembly-CSharp
+        m_MethodName: UploadToAWS
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -4419,6 +4420,21 @@ RectTransform:
   m_AnchoredPosition: {x: -0.000002861, y: 0.0000038142}
   m_SizeDelta: {x: 207.4065, y: 58.8239}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1273553046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273553041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52a359a791aaf0d4c9c30067ba389f65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  imageUploader: {fileID: 1518933176}
+  baseUrl: http://localhost:3000
+  folderName: PanoramaImages
 --- !u!1 &1273998483
 GameObject:
   m_ObjectHideFlags: 0
@@ -4714,9 +4730,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41d6c9385dfed0f439adee0fb85ed624, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rootObject: {fileID: 1900918492}
-  exportFolderPath: Assets/MyExports
-  exportFileName: ExportedSceneData.unitypackage
 --- !u!114 &1435362302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4729,9 +4742,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec650f74d31a2eb40929675ba5ccdd57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  exportButton: {fileID: 1273553042}
-  exportObjectsScript: {fileID: 1435362301}
-  sceneCleanerObject: {fileID: 1435362299}
 --- !u!1 &1461375589
 GameObject:
   m_ObjectHideFlags: 0
@@ -5248,8 +5258,9 @@ MonoBehaviour:
   separationDistance: 50
   uploadedTextures: []
   displayedImages: []
-  exportFolderPath: Assets/MyExports
-  exportFileName: ExportedScene.unitypackage
+  saveToAWS: {fileID: 0}
+  username: tempUser
+  propertyName: tempProperty
 --- !u!1 &1541277988
 GameObject:
   m_ObjectHideFlags: 0

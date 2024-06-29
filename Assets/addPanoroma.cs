@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine.Networking;
-using System.IO.Compression;
 using SFB; // Standalone File Browser namespace
 
 public class ImageUploader : MonoBehaviour
@@ -12,94 +11,40 @@ public class ImageUploader : MonoBehaviour
     public GameObject cameraPrefab;
     public GameObject rawImagePrefab;
     public Transform imageGridContainer;
-    public UnityEngine.UI.Button uploadButton;
-    public UnityEngine.UI.Button nextButton;
+    public Button uploadButton;
+    public Button nextButton;
     public GameObject parent;
     public GameObject invertedSpherePrefab;
     public Transform spawnPoint;
     public float separationDistance = 10f;
-
     public List<Texture2D> uploadedTextures = new List<Texture2D>();
     public List<GameObject> displayedImages = new List<GameObject>();
-    public string exportFolderPath = "MyExports";
-    public string exportFileName = "ExportedScene.zip";
-
-    private string resourcesImageFolder = "ImportedImages";
-
+    public SaveToAWS saveToAWS; // Reference to SaveToAWS script
+    
+    public string username = "tempUser"; // Temporary username
+    public string propertyName = "tempProperty"; // Temporary property name
     void Start()
     {
         uploadButton.onClick.AddListener(UploadImage);
         nextButton.onClick.AddListener(() => CreatePanoramaSpheres(parent.transform));
+    }
 
-        // Print the persistent data path
-        Debug.Log("Persistent Data Path: " + UnityEngine.Application.persistentDataPath);
+    public void UploadImage()
+    {
+        var extensions = new[] {
+            new ExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp", "gif"),
+            new ExtensionFilter("All Files", "*"),
+        };
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Image File", "", extensions, false);
 
-        // Ensure the ImportedImages folder exists
-        string path = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder);
-        if (!Directory.Exists(path))
+        if (paths != null && paths.Length > 0)
         {
-            Directory.CreateDirectory(path);
-            Debug.Log("ImportedImages directory created at: " + path);
+            string path = paths[0];
+            StartCoroutine(LoadTextureFromFile(path));
         }
         else
         {
-            Debug.Log("ImportedImages directory already exists at: " + path);
-        }
-    }
-
-public void UploadImage()
-{
-    var extensions = new[] {
-        new ExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp", "gif"),
-        new ExtensionFilter("All Files", "*"),
-    };
-    string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Image File", "", extensions, false);
-
-    if (paths != null && paths.Length > 0)
-    {
-        string path = paths[0];
-        string destinationPath = CopyImageToPersistentDataPath(path);
-        if (!string.IsNullOrEmpty(destinationPath))
-        {
-            StartCoroutine(LoadTextureFromFile(destinationPath));
-        }
-        else
-        {
-            Debug.LogError("Failed to copy image to persistent data path!");
-        }
-    }
-    else
-    {
-        Debug.Log("No file selected.");
-    }
-}
-    private string CopyImageToPersistentDataPath(string originalPath)
-    {
-        string destinationFileName = (uploadedTextures.Count + 1).ToString() + ".png";
-        string destinationPath = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder, destinationFileName);
-
-        string folderPath = Path.Combine(UnityEngine.Application.persistentDataPath, resourcesImageFolder);
-        Debug.Log("Creating directory at: " + folderPath);
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-            Debug.Log("Directory created.");
-        }
-        else
-        {
-            Debug.Log("Directory already exists.");
-        }
-
-        try
-        {
-            File.Copy(originalPath, destinationPath, true);
-            Debug.Log("Image copied to: " + destinationPath);
-            return destinationPath;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("Error copying image to persistent data path: " + ex.Message);
-            return null;
+            Debug.Log("No file selected.");
         }
     }
 
@@ -121,6 +66,9 @@ public void UploadImage()
                     DisplayImage(texture);
                     uploadedTextures.Add(texture);
                     Debug.Log("Texture added to uploadedTextures list. Count: " + uploadedTextures.Count);
+
+                    // Trigger AWS upload via SaveToAWS script
+                    // saveToAWS.UploadToAWS();
                 }
                 else
                 {
@@ -195,53 +143,21 @@ public void UploadImage()
         }
     }
 
-    public void ExportTextures()
-    {
-        string folderPath = Path.Combine(UnityEngine.Application.persistentDataPath, exportFolderPath);
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-        }
 
-        foreach (Texture2D texture in uploadedTextures)
-        {
-            string texturePath = Path.Combine(folderPath, texture.name + ".png");
-            byte[] textureBytes = texture.EncodeToPNG();
-            File.WriteAllBytes(texturePath, textureBytes);
-        }
 
-        Debug.Log("Textures exported successfully.");
-    }
 
-    public void ExportAssets()
-    {
-        string folderPath = Path.Combine(UnityEngine.Application.persistentDataPath, exportFolderPath);
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-        }
 
-        string packagePath = Path.Combine(UnityEngine.Application.persistentDataPath, exportFolderPath, exportFileName);
 
-        // Create a zip file
-        using (FileStream zipToOpen = new FileStream(packagePath, FileMode.Create))
-        {
-            using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Create))
-            {
-                foreach (Texture2D texture in uploadedTextures)
-                {
-                    string texturePath = Path.Combine(folderPath, texture.name + ".png");
-                    archive.CreateEntryFromFile(texturePath, Path.GetFileName(texturePath));
-                }
-            }
-        }
 
-        Debug.Log("Assets exported to " + packagePath);
-    }
 
-    public void ExportAll()
-    {
-        ExportTextures();
-        ExportAssets();
-    }
+
+
+
+
+
+
+
+
+    
+
 }
