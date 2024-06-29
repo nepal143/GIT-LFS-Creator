@@ -4,8 +4,8 @@ using System.Collections;
 using System.IO;
 using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
-using Dummiesman; // Ensure this namespace is available
 using TMPro; // Include TextMeshPro namespace
+using Dummiesman; // Include Dummiesman namespace
 
 public class ModelImporterWithFileBrowser : MonoBehaviour
 {
@@ -21,6 +21,10 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
     private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
+
+    // Temporary variables for username and property name
+    private string username = "tempUser";
+    private string propertyName = "tempProperty";
 
     void Start()
     {
@@ -72,13 +76,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
         Debug.Log("Loading OBJ from path: " + path);
 
-        if (!IsValidPath(path))
-        {
-            Debug.LogError("File path contains invalid characters.");
-            HideLoading();
-            yield break;
-        }
-
+        // Load OBJ model
         GameObject objModel = new OBJLoader().Load(path);
         if (objModel != null)
         {
@@ -87,9 +85,9 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             instantiatedModel.tag = dollHouseTag;
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
 
-            // Upload OBJ model to AWS S3
-            // yield return UploadToS3(path);
-
+            // Trigger upload to server
+            StartCoroutine(TriggerUploadToServer(path, username, propertyName));
+            
             // Change screen to DollHouse mode
             ChangeScreenForDollHouse();
         }
@@ -101,48 +99,33 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         HideLoading();
     }
 
-// IEnumerator UploadToS3(string filePath)
-// {
-//     byte[] objModelData = File.ReadAllBytes(filePath);
-//     WWWForm form = new WWWForm();
-//     form.AddBinaryData("file", objModelData, Path.GetFileName(filePath), "application/octet-stream");
-
-//     using (UnityWebRequest request = UnityWebRequest.Post("http://localhost:3000/upload", form))
-//     {
-//         yield return request.SendWebRequest();
-
-//         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-//         {
-//             Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
-//         }
-//         else
-//         {
-//             Debug.Log("OBJ model uploaded to S3.");
-//             Debug.Log("Response: " + request.downloadHandler.text);
-//         }
-//     }
-// }
-
-
-    bool IsValidPath(string path)
+    IEnumerator TriggerUploadToServer(string filePath, string username, string propertyName)
     {
-        char[] invalidChars = Path.GetInvalidPathChars();
-        foreach (char c in invalidChars)
+        ShowLoading("Uploading to server...");
+
+        // Prepare form data
+        WWWForm form = new WWWForm();
+        form.AddField("directoryPath", Path.GetDirectoryName(filePath)); // Send directory path
+        form.AddField("username", username); // Send username
+        form.AddField("propertyName", propertyName); // Send property name
+
+        // Send request to server
+        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/upload", form))
         {
-            if (path.Contains(c.ToString()))
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
             {
-                return false;
+                Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
+            }
+            else
+            {
+                Debug.Log("Files uploaded successfully.");
+                Debug.Log("Response: " + request.downloadHandler.text);
             }
         }
-        return true;
-    }
 
-    public void ChangeScreenForDollHouse()
-    {
-        mainCanvas.SetActive(false);
-        DollHouseRotationCanvas.SetActive(true);
-        mainCamera.gameObject.SetActive(false);
-        DollHouseCamera.gameObject.SetActive(true);
+        HideLoading();
     }
 
     void ShowLoading(string message)
@@ -170,5 +153,13 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         {
             loadingTextTMP.gameObject.SetActive(false);
         }
+    }
+
+    public void ChangeScreenForDollHouse()
+    {
+        mainCanvas.SetActive(false);
+        DollHouseRotationCanvas.SetActive(true);
+        mainCamera.gameObject.SetActive(false);
+        DollHouseCamera.gameObject.SetActive(true);
     }
 }

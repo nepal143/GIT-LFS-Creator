@@ -9,7 +9,7 @@ public class VerifyButton : MonoBehaviour
     [SerializeField] private TextMeshProUGUI responseText;
     [SerializeField] private APIManager apiManager;
 
-    private void Start()
+    private void Start()   
     {
         Button verifyButton = GetComponent<Button>();
         verifyButton.onClick.AddListener(VerifyPhoneNumber);
