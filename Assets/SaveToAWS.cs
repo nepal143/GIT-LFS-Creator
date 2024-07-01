@@ -11,6 +11,8 @@ public class SaveToAWS : MonoBehaviour
     public string folderName = "PanoramaImages"; // Folder name in S3
 
     private int imageIndex = 1; // Index to keep track of image order
+    public string username ;
+    public string propertyName ;
 
     public void Start(){
         string username = PlayerPrefs.GetString("username", "");
