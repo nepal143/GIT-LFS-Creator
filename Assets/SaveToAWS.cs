@@ -12,6 +12,11 @@ public class SaveToAWS : MonoBehaviour
 
     private int imageIndex = 1; // Index to keep track of image order
 
+    public void Start(){
+        string username = PlayerPrefs.GetString("username", "");
+        string propertyName = PlayerPrefs.GetString("propertyName", "");
+    }
+
     public void UploadToAWS()
     {
         StartCoroutine(UploadImagesToS3());
@@ -26,8 +31,8 @@ public class SaveToAWS : MonoBehaviour
             string textureName = $"{imageIndex}.png"; // Naming convention: 1.png, 2.png, 3.png, ...
 
             WWWForm form = new WWWForm();
-            form.AddField("username", imageUploader.username);
-            form.AddField("propertyName", imageUploader.propertyName);
+            form.AddField("username", username);
+            form.AddField("propertyName", propertyName);
             form.AddField("folderName", folderName); // Pass the folder name to server
             form.AddBinaryData("file", textureBytes, textureName, "image/png");
 
