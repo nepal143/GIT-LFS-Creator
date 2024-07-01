@@ -4,7 +4,7 @@ using TMPro;
 
 public class VerifyButton : MonoBehaviour
 {
-    [SerializeField] private TMP_InputField phoneNumberField; // Added phoneNumberField to get the phone number
+    [SerializeField] private TMP_InputField phoneNumberField; 
     [SerializeField] private TMP_InputField verificationCodeField;
     [SerializeField] private TextMeshProUGUI responseText;
     [SerializeField] private APIManager apiManager;

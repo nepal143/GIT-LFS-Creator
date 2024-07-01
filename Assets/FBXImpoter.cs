@@ -23,7 +23,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
 
     // Temporary variables for username and property name
-    private string username = "tempUser";
+    private string username = "tempUser1";
     private string propertyName = "tempProperty";
 
     void Start()

@@ -6,7 +6,7 @@ using TMPro;
 
 public class APIManager : MonoBehaviour
 {
-    private string baseUrl = "https://theserver-tp6r.onrender.com/";
+    private string baseUrl = "http://localhost:3000/";
     private string userId; // Store the user ID
 
     public void RegisterUser(string username, string phoneNumber, string password, Action<string> callback)
@@ -19,7 +19,7 @@ public class APIManager : MonoBehaviour
         UserRegisterData registerData = new UserRegisterData { username = username, phoneNumber = phoneNumber, password = password };
         string jsonData = JsonUtility.ToJson(registerData);
 
-        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}/register", "POST"))
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}user/register", "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -54,7 +54,7 @@ public class APIManager : MonoBehaviour
         VerificationData verificationData = new VerificationData { phoneNumber = phoneNumber, verificationCode = verificationCode };
         string jsonData = JsonUtility.ToJson(verificationData);
 
-        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}/verify", "POST"))
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}user/verify", "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -64,7 +64,7 @@ public class APIManager : MonoBehaviour
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
+            {   
                 Debug.LogError(request.error);
                 callback(request.error);
             }

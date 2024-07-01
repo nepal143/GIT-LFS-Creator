@@ -21,7 +21,7 @@ public class ImageUploader : MonoBehaviour
     public List<GameObject> displayedImages = new List<GameObject>();
     public SaveToAWS saveToAWS; // Reference to SaveToAWS script
     
-    public string username = "tempUser"; // Temporary username
+    public string username = "tempUser1"; // Temporary username
     public string propertyName = "tempProperty"; // Temporary property name
     void Start()
     {
