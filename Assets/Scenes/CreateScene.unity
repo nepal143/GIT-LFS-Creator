@@ -4435,6 +4435,8 @@ MonoBehaviour:
   imageUploader: {fileID: 1518933176}
   baseUrl: http://localhost:3000
   folderName: PanoramaImages
+  username: 
+  propertyName: 
 --- !u!1 &1273998483
 GameObject:
   m_ObjectHideFlags: 0
@@ -4588,7 +4590,7 @@ MonoBehaviour:
   DollHouseRotationCanvas: {fileID: 260231714}
   mainCamera: {fileID: 1617179902}
   DollHouseCamera: {fileID: 777089651}
-  loadingPanel: {fileID: 0}
+  loadingPanel: {fileID: 781907555}
   loadingTextTMP: {fileID: 323135711}
 --- !u!1 &1329887346
 GameObject:
@@ -5259,8 +5261,8 @@ MonoBehaviour:
   uploadedTextures: []
   displayedImages: []
   saveToAWS: {fileID: 0}
-  username: tempUser1
-  propertyName: tempProperty
+  username: 
+  propertyName: 
 --- !u!1 &1541277988
 GameObject:
   m_ObjectHideFlags: 0

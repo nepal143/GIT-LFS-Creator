@@ -23,11 +23,17 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
 
     // Temporary variables for username and property name
-    string username = PlayerPrefs.GetString("username", "");
-    string propertyName = PlayerPrefs.GetString("propertyName", "");
+    private string username;
+    private string propertyName;
 
     void Start()
     {
+        Debug.Log("Script started.");
+
+        // Retrieve saved username and property name
+        username = PlayerPrefs.GetString("username", "");
+        propertyName = PlayerPrefs.GetString("propertyName", "");
+
         if (importButton != null)
         {
             importButton.onClick.AddListener(OpenFileBrowser);
@@ -56,6 +62,9 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             string path = paths[0];
             Debug.Log("File selected: " + path);
 
+            // Convert to absolute path for consistency
+            path = Path.GetFullPath(path);
+
             StartCoroutine(LoadAndMoveOBJ(path));
         }
         else
@@ -73,11 +82,31 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         ShowLoading("Loading OBJ...");
+        Shader shader = Shader.Find("Standard");
+        if (shader == null)
+        {
+            Debug.LogError("Shader is null.");
+            HideLoading();
+            yield break;
+        }
 
         Debug.Log("Loading OBJ from path: " + path);
 
         // Load OBJ model
-        GameObject objModel = new OBJLoader().Load(path);
+        GameObject objModel = null;
+        try
+        {
+            objModel = new OBJLoader().Load(path);
+            Debug.Log("OBJ model loaded successfully.");
+            AssignDefaultShader(objModel); // Assign default shader
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Error loading OBJ: " + ex.Message);
+            HideLoading();
+            yield break;
+        }
+
         if (objModel != null)
         {
             // Instantiate the OBJ model
@@ -87,7 +116,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
             // Trigger upload to server
             StartCoroutine(TriggerUploadToServer(path, username, propertyName));
-            
+
             // Change screen to DollHouse mode
             ChangeScreenForDollHouse();
         }
@@ -97,6 +126,29 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         HideLoading();
+    }
+
+    void AssignDefaultShader(GameObject objModel)
+    {
+        Shader defaultShader = Shader.Find("Standard");
+        if (defaultShader == null)
+        {
+            Debug.LogError("Default shader not found. Make sure 'Standard' shader is included in the build.");
+            return;
+        }
+
+        Renderer[] renderers = objModel.GetComponentsInChildren<Renderer>();
+        foreach (var renderer in renderers)
+        {
+            foreach (var material in renderer.materials)
+            {
+                if (material.shader == null)
+                {
+                    material.shader = defaultShader;
+                    Debug.Log($"Assigned default shader to material: {material.name}");
+                }
+            }
+        }
     }
 
     IEnumerator TriggerUploadToServer(string filePath, string username, string propertyName)
@@ -130,6 +182,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
     void ShowLoading(string message)
     {
+        Debug.Log("Show loading: " + message);
+
         if (loadingPanel != null)
         {
             loadingPanel.SetActive(true);
@@ -144,6 +198,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
     void HideLoading()
     {
+        Debug.Log("Hide loading");
+
         if (loadingPanel != null)
         {
             loadingPanel.SetActive(false);
@@ -157,6 +213,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
     public void ChangeScreenForDollHouse()
     {
+        Debug.Log("Change screen to DollHouse mode");
+
         mainCanvas.SetActive(false);
         DollHouseRotationCanvas.SetActive(true);
         mainCamera.gameObject.SetActive(false);

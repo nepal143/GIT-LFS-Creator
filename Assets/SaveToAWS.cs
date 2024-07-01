@@ -15,8 +15,9 @@ public class SaveToAWS : MonoBehaviour
     public string propertyName ;
 
     public void Start(){
-        string username = PlayerPrefs.GetString("username", "");
-        string propertyName = PlayerPrefs.GetString("propertyName", "");
+        username = PlayerPrefs.GetString("username", "");
+        propertyName = PlayerPrefs.GetString("propertyName", "");
+        Debug.Log(username + " "+ propertyName );
     }
 
     public void UploadToAWS()
@@ -151,15 +152,15 @@ public class SaveToAWS : MonoBehaviour
     private IEnumerator SaveSceneDataToS3(string json)
     {
         // Ensure username and propertyName are not null or empty
-        if (string.IsNullOrEmpty(imageUploader.username) || string.IsNullOrEmpty(imageUploader.propertyName))
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(propertyName))
         {
             Debug.LogError("Username or PropertyName is null or empty. Aborting scene data save.");
             yield break; // Exit coroutine early
         }
 
         WWWForm form = new WWWForm();
-        form.AddField("username", imageUploader.username);
-        form.AddField("propertyName", imageUploader.propertyName);
+        form.AddField("username", username);
+        form.AddField("propertyName", propertyName);
         form.AddField("hotspots", json); // Send scene data JSON as 'hotspots'
 
         using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/save-positions-rotations", form))

@@ -21,10 +21,12 @@ public class ImageUploader : MonoBehaviour
     public List<GameObject> displayedImages = new List<GameObject>();
     public SaveToAWS saveToAWS; // Reference to SaveToAWS script
     
-    public string username = "tempUser1"; // Temporary username
-    public string propertyName = "tempProperty"; // Temporary property name
+    private string username  ; // Temporary username
+    private string propertyName ; // Temporary property name
     void Start()
     {
+        username = PlayerPrefs.GetString("username", "");
+        propertyName = PlayerPrefs.GetString("propertyName", "");
         uploadButton.onClick.AddListener(UploadImage);
         nextButton.onClick.AddListener(() => CreatePanoramaSpheres(parent.transform));
     }
