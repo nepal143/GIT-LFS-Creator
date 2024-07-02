@@ -22,6 +22,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
     private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
 
+    private Shader standardShader;
+
     // Temporary variables for username and property name
     private string username;
     private string propertyName;
@@ -48,6 +50,17 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         {
             loadingTextTMP.gameObject.SetActive(false);
         }
+
+        // Load the standard shader
+        standardShader = Shader.Find("Standard");
+        if (standardShader == null)
+        {
+            Debug.LogError("Standard shader not found. Ensure it is included in the build.");
+        }
+        else
+        {
+            Debug.Log("Standard shader loaded successfully.");
+        }
     }
 
     public void OpenFileBrowser()
@@ -63,7 +76,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             Debug.Log("File selected: " + path);
 
             // Convert to absolute path for consistency
-            path = Path.GetFullPath(path);
+            // path = Path.GetFullPath(path);
 
             StartCoroutine(LoadAndMoveOBJ(path));
         }
@@ -82,23 +95,22 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         ShowLoading("Loading OBJ...");
-        Shader shader = Shader.Find("Standard");
-        if (shader == null)
+
+        Debug.Log("Loading OBJ from path: " + path);
+
+        if (!IsValidPath(path))
         {
-            Debug.LogError("Shader is null.");
+            Debug.LogError("File path contains invalid characters.");
             HideLoading();
             yield break;
         }
 
-        Debug.Log("Loading OBJ from path: " + path);
-
-        // Load OBJ model
         GameObject objModel = null;
         try
         {
             objModel = new OBJLoader().Load(path);
             Debug.Log("OBJ model loaded successfully.");
-            AssignDefaultShader(objModel); // Assign default shader
+            ApplyShaderToModel(objModel, standardShader); // Assign default shader
         }
         catch (System.Exception ex)
         {
@@ -128,27 +140,29 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         HideLoading();
     }
 
-    void AssignDefaultShader(GameObject objModel)
+    void ApplyShaderToModel(GameObject model, Shader shader)
     {
-        Shader defaultShader = Shader.Find("Standard");
-        if (defaultShader == null)
+        if (shader == null)
         {
-            Debug.LogError("Default shader not found. Make sure 'Standard' shader is included in the build.");
+            Debug.LogError("Shader is null. Cannot apply shader to model.");
             return;
         }
 
-        Renderer[] renderers = objModel.GetComponentsInChildren<Renderer>();
-        foreach (var renderer in renderers)
+        Renderer[] renderers = model.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
         {
-            foreach (var material in renderer.materials)
+            foreach (Material material in renderer.materials)
             {
-                if (material.shader == null)
-                {
-                    material.shader = defaultShader;
-                    Debug.Log($"Assigned default shader to material: {material.name}");
-                }
+                material.shader = shader;
             }
         }
+        Debug.Log("Shader applied to model successfully.");
+    }
+
+    bool IsValidPath(string path)
+    {
+        char[] invalidChars = Path.GetInvalidPathChars();
+        return path.IndexOfAny(invalidChars) == -1;
     }
 
     IEnumerator TriggerUploadToServer(string filePath, string username, string propertyName)
