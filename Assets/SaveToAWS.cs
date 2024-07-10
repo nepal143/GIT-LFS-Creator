@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class SaveToAWS : MonoBehaviour
 {
     public ImageUploader imageUploader; // Reference to ImageUploader script
-    public string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
+    public string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
     public string folderName = "PanoramaImages"; // Folder name in S3
 
     private int imageIndex = 1; // Index to keep track of image order
@@ -49,7 +49,7 @@ public class SaveToAWS : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log($"Texture {textureName} uploaded successfully.");
+                    // Debug.Log($"Texture {textureName} uploaded successfully.");
                     Debug.Log("Response: " + request.downloadHandler.text);
                     imageIndex++; // Increment index for the next image
                 }
