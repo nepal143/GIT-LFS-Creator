@@ -20,7 +20,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public GameObject loadingPanel;
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
-    private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
+    private string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
 
     private Shader standardShader;
 
