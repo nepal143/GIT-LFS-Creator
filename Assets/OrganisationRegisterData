@@ -1,0 +1,16 @@
+[System.Serializable]
+public class OrganisationRegisterData
+{
+    public string organisationName;
+    public string rootUsername;
+    public string password;
+    public string phoneNumber;
+
+    public OrganisationRegisterData(string organisationName, string rootUsername, string password, string phoneNumber)
+    {
+        this.organisationName = organisationName;
+        this.rootUsername = rootUsername;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+    }
+}
