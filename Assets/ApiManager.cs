@@ -7,10 +7,12 @@ using TMPro;
 public class APIManager : MonoBehaviour
 {
     private string baseUrl = "http://localhost:3000/";
-    private string userId; // Store the user ID
+    private string userId;
+    private string storedPhoneNumber;
 
     public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
     {
+        storedPhoneNumber = phoneNumber;
         PlayerPrefs.SetString("rootPhoneNumber", phoneNumber); // Store the phone number in PlayerPrefs
         StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
     }
@@ -72,7 +74,7 @@ public class APIManager : MonoBehaviour
                 Debug.Log("Form upload complete!");
                 string responseText = request.downloadHandler.text;
                 var response = JsonUtility.FromJson<UserRegisterResponse>(responseText);
-                userId = response.userId; // Store the user ID
+                userId = response.userId;
                 callback(responseText);
             }
         }
@@ -80,8 +82,7 @@ public class APIManager : MonoBehaviour
 
     public void VerifyOrganisation(string verificationCode, Action<string> callback)
     {
-        string phoneNumber = PlayerPrefs.GetString("rootPhoneNumber"); // Retrieve the phone number from PlayerPrefs
-        StartCoroutine(VerifyOrganisationCoroutine(phoneNumber, verificationCode, callback));
+        StartCoroutine(VerifyOrganisationCoroutine(PlayerPrefs.GetString("rootPhoneNumber"), verificationCode, callback));
     }
 
     private IEnumerator VerifyOrganisationCoroutine(string phoneNumber, string verificationCode, Action<string> callback)
@@ -123,6 +124,39 @@ public class APIManager : MonoBehaviour
         string jsonData = JsonUtility.ToJson(verificationData);
 
         using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}user/verify", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
+                Debug.Log("Form upload complete!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
+
+    public void CreateProperty(string organisationName, string parentPropertyName, string location, string description, string builderName, Action<string> callback)
+    {
+        StartCoroutine(CreatePropertyCoroutine(organisationName, parentPropertyName, location, description, builderName, callback));
+    }
+
+    private IEnumerator CreatePropertyCoroutine(string organisationName, string parentPropertyName, string location, string description, string builderName, Action<string> callback)
+    {
+        PropertyCreateData propertyData = new PropertyCreateData(organisationName, parentPropertyName, location, description, builderName);
+        string jsonData = JsonUtility.ToJson(propertyData);
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}create-property", "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -189,5 +223,24 @@ public class APIManager : MonoBehaviour
     {
         public string phoneNumber;
         public string verificationCode;
+    }
+
+    [Serializable]
+    public class PropertyCreateData
+    {
+        public string organisationName;
+        public string parentPropertyName;
+        public string location;
+        public string description;
+        public string builderName;
+
+        public PropertyCreateData(string organisationName, string parentPropertyName, string location, string description, string builderName)
+        {
+            this.organisationName = organisationName;
+            this.parentPropertyName = parentPropertyName;
+            this.location = location;
+            this.description = description;
+            this.builderName = builderName;
+        }
     }
 }
