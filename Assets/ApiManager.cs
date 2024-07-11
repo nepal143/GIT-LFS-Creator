@@ -8,7 +8,38 @@ public class APIManager : MonoBehaviour
 {
     private string baseUrl = "http://localhost:3000/";
     private string userId; // Store the user ID
+      public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
+    {
+        StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
+    }
 
+    private IEnumerator RegisterOrganisationCoroutine(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
+    {
+        OrganisationRegisterData registerData = new OrganisationRegisterData(organisationName, rootUsername, password, phoneNumber);
+        string jsonData = JsonUtility.ToJson(registerData);
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}organisation/create-organisation", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
+                Debug.Log("Form upload complete!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
     public void RegisterUser(string username, string phoneNumber, string password, Action<string> callback)
     {
         StartCoroutine(RegisterUserCoroutine(username, phoneNumber, password, callback));
@@ -97,5 +128,20 @@ public class APIManager : MonoBehaviour
     {
         public string phoneNumber;
         public string verificationCode;
+    }
+       public class OrganisationRegisterData
+    {
+        public string organisationName;
+        public string rootUsername;
+        public string password;
+        public string phoneNumber;
+
+        public OrganisationRegisterData(string organisationName, string rootUsername, string password, string phoneNumber)
+        {
+            this.organisationName = organisationName;
+            this.rootUsername = rootUsername;
+            this.password = password;
+            this.phoneNumber = phoneNumber;
+        }
     }
 }
