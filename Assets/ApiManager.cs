@@ -8,8 +8,10 @@ public class APIManager : MonoBehaviour
 {
     private string baseUrl = "http://localhost:3000/";
     private string userId; // Store the user ID
-      public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
+
+    public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
     {
+        PlayerPrefs.SetString("rootPhoneNumber", phoneNumber); // Store the phone number in PlayerPrefs
         StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
     }
 
@@ -40,6 +42,7 @@ public class APIManager : MonoBehaviour
             }
         }
     }
+
     public void RegisterUser(string username, string phoneNumber, string password, Action<string> callback)
     {
         StartCoroutine(RegisterUserCoroutine(username, phoneNumber, password, callback));
@@ -75,6 +78,40 @@ public class APIManager : MonoBehaviour
         }
     }
 
+    public void VerifyOrganisation(string verificationCode, Action<string> callback)
+    {
+        string phoneNumber = PlayerPrefs.GetString("rootPhoneNumber"); // Retrieve the phone number from PlayerPrefs
+        StartCoroutine(VerifyOrganisationCoroutine(phoneNumber, verificationCode, callback));
+    }
+
+    private IEnumerator VerifyOrganisationCoroutine(string phoneNumber, string verificationCode, Action<string> callback)
+    {
+        OrganisationVerificationData verificationData = new OrganisationVerificationData { phoneNumber = phoneNumber, verificationCode = verificationCode };
+        string jsonData = JsonUtility.ToJson(verificationData);
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}organisation/verify-root", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
+                Debug.Log("Form upload complete!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
+
     public void VerifyPhoneNumber(string phoneNumber, string verificationCode, Action<string> callback)
     {
         StartCoroutine(VerifyPhoneNumberCoroutine(phoneNumber, verificationCode, callback));
@@ -95,7 +132,7 @@ public class APIManager : MonoBehaviour
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {   
+            {
                 Debug.LogError(request.error);
                 callback(request.error);
             }
@@ -129,7 +166,9 @@ public class APIManager : MonoBehaviour
         public string phoneNumber;
         public string verificationCode;
     }
-       public class OrganisationRegisterData
+
+    [Serializable]
+    public class OrganisationRegisterData
     {
         public string organisationName;
         public string rootUsername;
@@ -143,5 +182,12 @@ public class APIManager : MonoBehaviour
             this.password = password;
             this.phoneNumber = phoneNumber;
         }
+    }
+
+    [Serializable]
+    public class OrganisationVerificationData
+    {
+        public string phoneNumber;
+        public string verificationCode;
     }
 }
