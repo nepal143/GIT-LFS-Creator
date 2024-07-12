@@ -840,6 +840,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   apiManager: {fileID: 1837151888}
+  creatingUI: {fileID: 841313210}
+  verifyUI: {fileID: 865534798}
   organisationNameField: {fileID: 514456212}
   rootUsernameField: {fileID: 1098089892}
   passwordField: {fileID: 1106952734}
@@ -1478,13 +1480,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 650329845}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1219359345}
-  m_Father: {fileID: 1905258330}
+  m_Father: {fileID: 865534799}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1885,7 +1887,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &841313211
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1926,7 +1928,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &865534799
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1940,6 +1942,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1905258330}
+  - {fileID: 650329846}
   m_Father: {fileID: 1825332920}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -1965,7 +1968,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &912043465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4214,7 +4217,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1825332917
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4686,7 +4689,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1308906747}
-  - {fileID: 650329846}
   m_Father: {fileID: 865534799}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -4936,6 +4938,7 @@ GameObject:
   - component: {fileID: 2113709405}
   - component: {fileID: 2113709404}
   - component: {fileID: 2113709403}
+  - component: {fileID: 2113709406}
   m_Layer: 5
   m_Name: 'Create Organisation '
   m_TagString: Untagged
@@ -5006,7 +5009,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2113709404}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2113709406}
+        m_TargetAssemblyTypeName: CreateOrganisationUIFlow, Assembly-CSharp
+        m_MethodName: CreateOrganisationFlow
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2113709404
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5045,6 +5060,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2113709401}
   m_CullTransparentMesh: 1
+--- !u!114 &2113709406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2113709401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be591b0f5eaec0041b1ed87ef51d6e41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  organisationRegistrationUI: {fileID: 1825332916}
+  OrganisationPage: {fileID: 912043464}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

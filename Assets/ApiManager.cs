@@ -2,7 +2,6 @@ using UnityEngine;
 using System;
 using System.Collections;
 using UnityEngine.Networking;
-using TMPro;
 
 public class APIManager : MonoBehaviour
 {
@@ -10,13 +9,47 @@ public class APIManager : MonoBehaviour
     private string userId;
     private string storedPhoneNumber;
 
-    public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
+    // Method to create a property
+    public void CreateProperty(string organisationName, string parentPropertyName, string location, string description, string builderName, Action<string> callback)
     {
-        storedPhoneNumber = phoneNumber;
-        PlayerPrefs.SetString("rootPhoneNumber", phoneNumber); // Store the phone number in PlayerPrefs
-        StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
+        StartCoroutine(CreatePropertyCoroutine(organisationName, parentPropertyName, location, description, builderName, callback));
     }
 
+    private IEnumerator CreatePropertyCoroutine(string organisationName, string parentPropertyName, string location, string description, string builderName, Action<string> callback)
+    {
+        PropertyCreateData propertyData = new PropertyCreateData(organisationName, parentPropertyName, location, description, builderName);
+        string jsonData = JsonUtility.ToJson(propertyData);
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}create-property", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
+                Debug.Log("Property creation request completed!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
+
+ public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
+{
+    storedPhoneNumber = phoneNumber;
+    PlayerPrefs.SetString("rootPhoneNumber", phoneNumber); // Store the phone number in PlayerPrefs
+    PlayerPrefs.SetString("organisationName", organisationName); // Store the organisation name in PlayerPrefs
+    StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
+}
     private IEnumerator RegisterOrganisationCoroutine(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
     {
         OrganisationRegisterData registerData = new OrganisationRegisterData(organisationName, rootUsername, password, phoneNumber);
@@ -38,7 +71,40 @@ public class APIManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("Form upload complete!");
+                Debug.Log("Organisation registration request completed!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
+
+    public void VerifyOrganisation(string verificationCode, Action<string> callback)
+    {
+        StartCoroutine(VerifyOrganisationCoroutine(PlayerPrefs.GetString("rootPhoneNumber"), verificationCode, callback));
+    }
+
+    private IEnumerator VerifyOrganisationCoroutine(string phoneNumber, string verificationCode, Action<string> callback)
+    {
+        OrganisationVerificationData verificationData = new OrganisationVerificationData { phoneNumber = phoneNumber, verificationCode = verificationCode };
+        string jsonData = JsonUtility.ToJson(verificationData);
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}organisation/verify-root", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
+                Debug.Log("Organisation verification request completed!");
                 string responseText = request.downloadHandler.text;
                 callback(responseText);
             }
@@ -71,43 +137,10 @@ public class APIManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("Form upload complete!");
+                Debug.Log("User registration request completed!");
                 string responseText = request.downloadHandler.text;
                 var response = JsonUtility.FromJson<UserRegisterResponse>(responseText);
                 userId = response.userId;
-                callback(responseText);
-            }
-        }
-    }
-
-    public void VerifyOrganisation(string verificationCode, Action<string> callback)
-    {
-        StartCoroutine(VerifyOrganisationCoroutine(PlayerPrefs.GetString("rootPhoneNumber"), verificationCode, callback));
-    }
-
-    private IEnumerator VerifyOrganisationCoroutine(string phoneNumber, string verificationCode, Action<string> callback)
-    {
-        OrganisationVerificationData verificationData = new OrganisationVerificationData { phoneNumber = phoneNumber, verificationCode = verificationCode };
-        string jsonData = JsonUtility.ToJson(verificationData);
-
-        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}organisation/verify-root", "POST"))
-        {
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError(request.error);
-                callback(request.error);
-            }
-            else
-            {
-                Debug.Log("Form upload complete!");
-                string responseText = request.downloadHandler.text;
                 callback(responseText);
             }
         }
@@ -139,43 +172,30 @@ public class APIManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("Form upload complete!");
+                Debug.Log("Phone number verification request completed!");
                 string responseText = request.downloadHandler.text;
                 callback(responseText);
             }
         }
     }
 
-    public void CreateProperty(string organisationName, string parentPropertyName, string location, string description, string builderName, Action<string> callback)
+    // Classes for serializing data to JSON
+    [Serializable]
+    public class PropertyCreateData
     {
-        StartCoroutine(CreatePropertyCoroutine(organisationName, parentPropertyName, location, description, builderName, callback));
-    }
+        public string organisationName;
+        public string parentPropertyName;
+        public string location;
+        public string description;
+        public string builderName;
 
-    private IEnumerator CreatePropertyCoroutine(string organisationName, string parentPropertyName, string location, string description, string builderName, Action<string> callback)
-    {
-        PropertyCreateData propertyData = new PropertyCreateData(organisationName, parentPropertyName, location, description, builderName);
-        string jsonData = JsonUtility.ToJson(propertyData);
-
-        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}create-property", "POST"))
+        public PropertyCreateData(string organisationName, string parentPropertyName, string location, string description, string builderName)
         {
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError(request.error);
-                callback(request.error);
-            }
-            else
-            {
-                Debug.Log("Form upload complete!");
-                string responseText = request.downloadHandler.text;
-                callback(responseText);
-            }
+            this.organisationName = organisationName;
+            this.parentPropertyName = parentPropertyName;
+            this.location = location;
+            this.description = description;
+            this.builderName = builderName;
         }
     }
 
@@ -223,24 +243,5 @@ public class APIManager : MonoBehaviour
     {
         public string phoneNumber;
         public string verificationCode;
-    }
-
-    [Serializable]
-    public class PropertyCreateData
-    {
-        public string organisationName;
-        public string parentPropertyName;
-        public string location;
-        public string description;
-        public string builderName;
-
-        public PropertyCreateData(string organisationName, string parentPropertyName, string location, string description, string builderName)
-        {
-            this.organisationName = organisationName;
-            this.parentPropertyName = parentPropertyName;
-            this.location = location;
-            this.description = description;
-            this.builderName = builderName;
-        }
     }
 }
