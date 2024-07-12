@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 using System;
 
 public class OrganisationVerificationUI : MonoBehaviour
@@ -27,6 +28,9 @@ public class OrganisationVerificationUI : MonoBehaviour
         {
             Debug.Log("Verification response: " + response);
             errorText.text = "Organisation verified successfully!";
+            
+            // Change scene to MainMenu
+            SceneManager.LoadScene("MainMenu");
         }
     }
 }

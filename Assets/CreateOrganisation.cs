@@ -5,6 +5,8 @@ using System;
 public class OrganisationRegistrationUI : MonoBehaviour
 {
     public APIManager apiManager;
+    public GameObject creatingUI;
+    public GameObject verifyUI;
 
     [SerializeField] private TMP_InputField organisationNameField;
     [SerializeField] private TMP_InputField rootUsernameField;
@@ -35,5 +37,8 @@ public class OrganisationRegistrationUI : MonoBehaviour
     private void OnRegistrationComplete(string response)
     {
         Debug.Log("Registration response: " + response);
+        // Show verifyUI and hide creatingUI
+        creatingUI.SetActive(false);
+        verifyUI.SetActive(true);
     }
 }
