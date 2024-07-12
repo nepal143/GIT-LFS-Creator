@@ -3,11 +3,13 @@ using System;
 using System.Collections;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+
 public class LoginManager : MonoBehaviour
 {
     private string baseUrl = "http://localhost:3000/";
     private string jwtToken;
     private string storedUsername;
+    private string organisationName;
 
     public void LoginUser(string username, string password, Action<string> callback)
     {
@@ -36,9 +38,15 @@ public class LoginManager : MonoBehaviour
             else
             {
                 Debug.Log("Login successful!");
+
+                // Parse the response to get token and organisation name
+                UserLoginResponse loginResponse = JsonUtility.FromJson<UserLoginResponse>(request.downloadHandler.text);
+                jwtToken = loginResponse.token;
+                organisationName = loginResponse.organisationName;
+
                 storedUsername = username; // Store the username
                 PlayerPrefs.SetString("username", storedUsername); // Save username for future use
-                 // Save token for future use
+                PlayerPrefs.SetString("organisationName", organisationName); // Save organisation name for future use
 
                 // Save the username for the profile view
                 PlayerPrefs.SetString("profileUsername", username);
@@ -46,7 +54,6 @@ public class LoginManager : MonoBehaviour
                 int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
                 int nextSceneIndex = currentSceneIndex + 1;
                 SceneManager.LoadScene(nextSceneIndex);
-            
             }
         }
     }
@@ -62,5 +69,6 @@ public class LoginManager : MonoBehaviour
     public class UserLoginResponse
     {
         public string token;
+        public string organisationName; // Add organisationName field
     }
 }
