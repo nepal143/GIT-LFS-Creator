@@ -38,6 +38,7 @@ public class LoginManager : MonoBehaviour
             else
             {
                 Debug.Log("Login successful!");
+                
 
                 // Parse the response to get token and organisation name
                 UserLoginResponse loginResponse = JsonUtility.FromJson<UserLoginResponse>(request.downloadHandler.text);

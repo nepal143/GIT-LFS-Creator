@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 public class APIManager : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/";
+    private string baseUrl = "http://localhost:3000/parentproperty/"; 
     private string userId;
     private string storedPhoneNumber;
 
@@ -43,13 +43,14 @@ public class APIManager : MonoBehaviour
         }
     }
 
- public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
-{
-    storedPhoneNumber = phoneNumber;
-    PlayerPrefs.SetString("rootPhoneNumber", phoneNumber); // Store the phone number in PlayerPrefs
-    PlayerPrefs.SetString("organisationName", organisationName); // Store the organisation name in PlayerPrefs
-    StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
-}
+    public void RegisterOrganisation(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
+    {
+        storedPhoneNumber = phoneNumber;
+        PlayerPrefs.SetString("rootPhoneNumber", phoneNumber); // Store the phone number in PlayerPrefs
+        PlayerPrefs.SetString("organisationName", organisationName); // Store the organisation name in PlayerPrefs
+        StartCoroutine(RegisterOrganisationCoroutine(organisationName, rootUsername, password, phoneNumber, callback));
+    }
+
     private IEnumerator RegisterOrganisationCoroutine(string organisationName, string rootUsername, string password, string phoneNumber, Action<string> callback)
     {
         OrganisationRegisterData registerData = new OrganisationRegisterData(organisationName, rootUsername, password, phoneNumber);
@@ -173,6 +174,31 @@ public class APIManager : MonoBehaviour
             else
             {
                 Debug.Log("Phone number verification request completed!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
+
+    // Method to get child properties of a parent property
+    public void GetChildProperties(string parentPropertyName, Action<string> callback)
+    {
+        StartCoroutine(GetChildPropertiesCoroutine(parentPropertyName, callback));
+    }
+
+    private IEnumerator GetChildPropertiesCoroutine(string parentPropertyName, Action<string> callback)
+    {
+        using (UnityWebRequest request = UnityWebRequest.Get($"{baseUrl}child-properties/{parentPropertyName}"))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
                 string responseText = request.downloadHandler.text;
                 callback(responseText);
             }
