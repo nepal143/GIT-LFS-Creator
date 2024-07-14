@@ -7,7 +7,7 @@ using TMPro; // Add TextMeshPro namespace
 public class FetchOrganisationData : MonoBehaviour
 {
     [SerializeField] private string baseUrl = "http://localhost:3000"; // Replace with your server URL
-    [SerializeField] private string organisationName ; // Replace with the organisation name
+    private string organisationName ; // Replace with the organisation name
     [SerializeField] private TextMeshProUGUI organisationNameTextObject; // Drag the new TextMeshPro object here in the Inspector
     [SerializeField] private GameObject usernamesContainer; // Drag the UsernamesContainer here in the Inspector
     [SerializeField] private GameObject propertiesContainer; // Drag the PropertiesContainer here in the Inspector
@@ -19,6 +19,10 @@ public class FetchOrganisationData : MonoBehaviour
         organisationName = PlayerPrefs.GetString("organisationName");
     }
 
+    public void OnClickFetchOrganisationData()
+    {
+        StartCoroutine(GetOrganisationDetails(organisationName));
+    }
     IEnumerator GetOrganisationDetails(string organisationName)
     {
         string url = $"{baseUrl}/organisation/organisation/{organisationName}";

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement; // Add this namespace to use SceneManager
 
 public class CreatePropertyUI : MonoBehaviour
 {
@@ -30,6 +31,14 @@ public class CreatePropertyUI : MonoBehaviour
 
     private void OnCreatePropertyResponse(string response)
     {
-        resultText.text = response;
+        if (response == "Property created and added to the organisation successfully")
+        {
+            PlayerPrefs.SetString("parentPropertyName", propertyNameInput.text);
+            SceneManager.LoadScene("parentDashboard");
+        }
+        else
+        {
+            resultText.text = response;
+        }
     }
 }
