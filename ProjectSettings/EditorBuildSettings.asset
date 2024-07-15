@@ -24,6 +24,9 @@ EditorBuildSettings:
     path: Assets/Scenes/NewParentProperty.unity
     guid: 2042c8bcfd9e12e489de4b47b4b65fc8
   - enabled: 1
+    path: Assets/Scenes/CreateSceneParent.unity
+    guid: cb862c8e96c07204bb3fa8baf2e0dc05
+  - enabled: 1
     path: Assets/Scenes/parentDashboard.unity
     guid: 1d025fe071585cd4397c822919ddf03a
   m_configObjects: {}

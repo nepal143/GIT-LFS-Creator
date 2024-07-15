@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 public class APIManager : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/parentproperty/"; 
+    private string baseUrl = "http://localhost:3000/"; 
     private string userId;
     private string storedPhoneNumber;
 
@@ -20,7 +20,39 @@ public class APIManager : MonoBehaviour
         PropertyCreateData propertyData = new PropertyCreateData(organisationName, parentPropertyName, location, description, builderName);
         string jsonData = JsonUtility.ToJson(propertyData);
 
-        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}create-property", "POST"))
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}parentproperty/create-property", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(request.error);
+                callback(request.error);
+            }
+            else
+            {
+                Debug.Log("Property creation request completed!");
+                string responseText = request.downloadHandler.text;
+                callback(responseText);
+            }
+        }
+    }
+    public void CreateChildProperty(string organisationName, string parentPropertyName, string childPropertyName, Action<string> callback)
+    {
+        StartCoroutine(CreateChildCoroutine(organisationName, parentPropertyName ,callback));
+    }
+
+    private IEnumerator CreateChildCoroutine(string organisationName, string childPropertyName, Action<string> callback)
+    {
+        ChildPropertyCreateData propertyData = new ChildPropertyCreateData(organisationName, childPropertyName);
+        string jsonData = JsonUtility.ToJson(propertyData);
+
+        using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}childproperty/create-property", "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -224,6 +256,21 @@ public class APIManager : MonoBehaviour
             this.builderName = builderName;
         }
     }
+
+       [Serializable]
+    public class ChildPropertyCreateData
+    {
+        public string organisationName;
+        public string parentPropertyName;
+
+        public ChildPropertyCreateData(string organisationName, string parentPropertyName)
+        {
+            this.organisationName = organisationName;
+            this.parentPropertyName = parentPropertyName;
+        }
+    }
+
+    
 
     [Serializable]
     public class UserRegisterData

@@ -6,7 +6,9 @@ using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
 using TMPro; // Include TextMeshPro namespace
 using Dummiesman; // Include Dummiesman namespace
-
+using UnityEngine.Networking;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 public class ModelImporterWithFileBrowser : MonoBehaviour
 {
     public Button importButton;
@@ -27,9 +29,11 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     // Temporary variables for username and property name
     private string username;
     private string propertyName;
+    private string childPropertyName;
 
     void Start()
     {
+       childPropertyName = PlayerPrefs.GetString("childPropertyName", "");
         Debug.Log("Script started.");
 
         // Retrieve saved username and property name
@@ -61,6 +65,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         {
             Debug.Log("Standard shader loaded successfully.");
         }
+        
     }
 
     public void OpenFileBrowser()
@@ -127,7 +132,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
 
             // Trigger upload to server
-            StartCoroutine(TriggerUploadToServer(path, username, propertyName));
+            
+            StartCoroutine(TriggerUploadToServer(path, propertyName , childPropertyName));
 
             // Change screen to DollHouse mode
             ChangeScreenForDollHouse();
@@ -165,15 +171,17 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         return path.IndexOfAny(invalidChars) == -1;
     }
 
-    IEnumerator TriggerUploadToServer(string filePath, string username, string propertyName)
+    IEnumerator TriggerUploadToServer(string filePath, string propertyName ,string ChildPropertyName )
     {
         ShowLoading("Uploading to server...");
 
         // Prepare form data
         WWWForm form = new WWWForm();
         form.AddField("directoryPath", Path.GetDirectoryName(filePath)); // Send directory path
-        form.AddField("username", username); // Send username
-        form.AddField("propertyName", propertyName); // Send property name
+        form.AddField("organisationName", PlayerPrefs.GetString("organisationName") ); // Send organisationName
+        form.AddField("parentpropertyName",  PlayerPrefs.GetString("parentPropertyName")); // Send property name
+        form.AddField("childPropertyName", ChildPropertyName);
+
 
         // Send request to server
         using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/upload", form))

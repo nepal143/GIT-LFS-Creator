@@ -6,56 +6,55 @@ using System.Collections.Generic;
 
 public class SaveToAWS : MonoBehaviour
 {
-    public ImageUploader imageUploader; // Reference to ImageUploader script
     public string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
-    public string folderName = "PanoramaImages"; // Folder name in S3
+    [SerializeField]
+    private string folderName = "PanoramaImages"; // Default folder name in S3
 
-    private int imageIndex = 1; // Index to keep track of image order
-    public string username ;
-    public string propertyName ;
+    private string username;
+    private string propertyName;
 
-    public void Start(){
+    void Start()
+    {
         username = PlayerPrefs.GetString("username", "");
         propertyName = PlayerPrefs.GetString("propertyName", "");
-        Debug.Log(username + " "+ propertyName );
+        Debug.Log(username + " " + propertyName);
     }
 
-    public void UploadToAWS()
+    public void UploadSingleImageToAWS(Texture2D texture, string folderName)
     {
-        StartCoroutine(UploadImagesToS3());
-        RecordSceneData();
+        StartCoroutine(UploadImageToS3(texture, folderName));
     }
 
-    private IEnumerator UploadImagesToS3()
+    private IEnumerator UploadImageToS3(Texture2D texture, string folderName)
     {
-        foreach (Texture2D texture in imageUploader.uploadedTextures)
+        // Debug.Log($"Attempting to upload texture to: {baseUrl}/upload-image");
+        byte[] textureBytes = texture.EncodeToPNG();
+        string textureName = "Thumbnail.png"; // Fixed naming for single image
+
+        WWWForm form = new WWWForm();
+        form.AddField("username", username);
+        form.AddField("propertyName", PlayerPrefs.GetString("parentPropertyName"));
+        form.AddField("folderName", folderName); // Pass the folder name to server
+         // here add the organisation name from the playerprefs
+        form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
+        form.AddBinaryData("file", textureBytes, textureName, "image/png");
+
+        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload/upload-image", form))
         {
-            byte[] textureBytes = texture.EncodeToPNG();
-            string textureName = $"{imageIndex}.png"; // Naming convention: 1.png, 2.png, 3.png, ...
+            yield return request.SendWebRequest();
 
-            WWWForm form = new WWWForm();
-            form.AddField("username", username);
-            form.AddField("propertyName", propertyName);
-            form.AddField("folderName", folderName); // Pass the folder name to server
-            form.AddBinaryData("file", textureBytes, textureName, "image/png");
-
-            using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/upload-image", form))
+            if (request.result != UnityWebRequest.Result.Success)
             {
-                yield return request.SendWebRequest();
-
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError($"Error uploading texture {textureName}: {request.error}");
-                }
-                else
-                {
-                    // Debug.Log($"Texture {textureName} uploaded successfully.");
-                    Debug.Log("Response: " + request.downloadHandler.text);
-                    imageIndex++; // Increment index for the next image
-                }
+                Debug.LogError($"Error uploading texture {textureName}: {request.error}");
+            }
+            else
+            {
+                Debug.Log("Texture uploaded successfully.");
+                Debug.Log("Response: " + request.downloadHandler.text);
             }
         }
     }
+
 
     [System.Serializable]
     public class SerializableVector3

@@ -15,8 +15,8 @@ public class FetchOrganisationData : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(GetOrganisationDetails(organisationName));
         organisationName = PlayerPrefs.GetString("organisationName");
+        StartCoroutine(GetOrganisationDetails(organisationName));
     }
 
     public void OnClickFetchOrganisationData()
