@@ -132,7 +132,7 @@ public class FetchChildProperties : MonoBehaviour
                 TextMeshProUGUI deleteButtonText = deleteButton.GetComponentInChildren<TextMeshProUGUI>();
                 if (deleteButtonText != null)
                 {
-                    deleteButtonText.text = "Delete";
+                    deleteButtonText.text = "X";
                 }
                 else
                 {
@@ -188,7 +188,14 @@ public class FetchChildProperties : MonoBehaviour
             else
             {
                 Debug.Log($"Child property {propertyName} deleted successfully.");
-                Destroy(buttonContainer);
+                if (buttonContainer != null)
+                {
+                    Destroy(buttonContainer);
+                }
+                else
+                {
+                    Debug.LogError("Button container is null.");
+                }
             }
         }
     }
