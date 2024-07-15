@@ -1,25 +1,30 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
+using TMPro; // TextMeshPro namespace
 
 public class AWSImageUploader : MonoBehaviour
 {
     public Button uploadButton;
+    public Button uploadMultipleButton; // New button for uploading multiple images
     public Button saveButton;
+    public TMP_Text filePathsText; // Text component to display file paths
     public SaveToAWS saveToAWS; // Reference to SaveToAWS script
 
     [SerializeField]
     private string folderName = "Thumbnail"; // Folder name to be set in the Inspector
 
-    private Texture2D uploadedTexture;
-    private string uploadedFilePath;
+    private List<Texture2D> uploadedTextures = new List<Texture2D>(); // List to hold multiple textures
+    private List<string> uploadedFilePaths = new List<string>(); // List to hold multiple file paths
 
     void Start()
     {
-        // uploadButton.onClick.AddListener(OpenFileBrowser);
-        saveButton.onClick.AddListener(SaveImageToAWS);
+        uploadButton.onClick.AddListener(OpenFileBrowser);
+        uploadMultipleButton.onClick.AddListener(OpenMultipleFileBrowser); // Add listener for new button
+        saveButton.onClick.AddListener(SaveImagesToAWS);
     }
 
     private void OpenFileBrowser()
@@ -32,8 +37,10 @@ public class AWSImageUploader : MonoBehaviour
 
         if (paths != null && paths.Length > 0)
         {
-            uploadedFilePath = paths[0];
-            StartCoroutine(LoadTextureFromFile(uploadedFilePath));
+            uploadedFilePaths.Clear();
+            uploadedFilePaths.Add(paths[0]);
+            filePathsText.text = "Selected File: " + paths[0]; // Display the selected file path
+            StartCoroutine(LoadTexturesFromFiles(paths));
         }
         else
         {
@@ -41,53 +48,55 @@ public class AWSImageUploader : MonoBehaviour
         }
     }
 
-    private IEnumerator LoadTextureFromFile(string path)
+    private void OpenMultipleFileBrowser()
     {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture("file://" + path))
+        var extensions = new[] {
+            new ExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp", "gif"),
+            new ExtensionFilter("All Files", "*"),
+        };
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Image Files", "", extensions, true);
+
+        if (paths != null && paths.Length > 0)
         {
-            yield return uwr.SendWebRequest();
-
-            if (uwr.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError("Failed to load texture from file: " + uwr.error);
-            }
-            else
-            {
-                uploadedTexture = DownloadHandlerTexture.GetContent(uwr);
-                if (uploadedTexture != null)
-                {
-                    Debug.Log("Texture loaded successfully.");
-                }
-                else
-                {
-                    Debug.LogError("Failed to create texture from file!");
-                }
-            }
-        }
-    }
-
-    private void SaveImageToAWS()
-    {
-        if (uploadedTexture != null)
-        {
-            if (string.IsNullOrEmpty(folderName))
-            {
-                Debug.LogError("Folder name is not set.");
-                return;
-            }
-
-            // Upload logic to AWS
-            string organizationName = "YourOrganizationName"; // Replace with your organization name
-            string path = $"{folderName}";
-
-            // Assuming you have a method in SaveToAWS for uploading
-            saveToAWS.UploadSingleImageToAWS(uploadedTexture, path);
-
-            Debug.Log("Image uploaded to AWS.");
+            uploadedFilePaths.Clear();
+            uploadedFilePaths.AddRange(paths); // Add paths to the list
+            filePathsText.text = "Selected Files:\n" + string.Join("\n", paths); // Display the selected file paths
+            StartCoroutine(LoadTexturesFromFiles(paths));
         }
         else
         {
-            Debug.LogError("No texture to upload.");
+            Debug.Log("No files selected.");
+        }
+    }
+
+    private IEnumerator LoadTexturesFromFiles(string[] filePaths)
+    {
+        uploadedTextures.Clear();
+
+        foreach (string filePath in filePaths)
+        {
+            byte[] fileData = System.IO.File.ReadAllBytes(filePath);
+            Texture2D texture = new Texture2D(2, 2);
+            texture.LoadImage(fileData);
+            uploadedTextures.Add(texture);
+
+            yield return null;
+        }
+    }
+
+    private void SaveImagesToAWS()
+    {
+        if (uploadedTextures.Count == 1)
+        {
+            saveToAWS.UploadSingleImageToAWS(uploadedTextures[0], folderName);
+        }
+        else if (uploadedTextures.Count > 0)
+        {
+            saveToAWS.UploadMultipleImagesToAWS(uploadedTextures, folderName);
+        }
+        else
+        {
+            Debug.LogError("No textures to upload.");
         }
     }
 }
