@@ -5,7 +5,6 @@ using UnityEngine.SceneManagement; // Add this namespace to use SceneManager
 
 public class CreateChildPropertyUI : MonoBehaviour
 {
-    public TMP_InputField propertyNameInput;
 
     public TMP_InputField childPropertyNameInput;
     public Button createPropertyButton;
@@ -20,7 +19,7 @@ public class CreateChildPropertyUI : MonoBehaviour
     private void OnCreatePropertyButtonClicked()
     {
         string organisationName = PlayerPrefs.GetString("organisationName");  // Get the organisation name from PlayerPrefs
-        string propertyName = propertyNameInput.text;
+        string propertyName = PlayerPrefs.GetString("parentPropertyName"); // Get the parent property name from PlayerPrefs
         string childPropertyName = childPropertyNameInput.text;
 
         apiManager.CreateChildProperty(organisationName, propertyName, childPropertyName, OnCreatePropertyResponse);
@@ -30,7 +29,7 @@ public class CreateChildPropertyUI : MonoBehaviour
     {
         if (response == "Property created and added to the organisation successfully")
         {
-            PlayerPrefs.SetString("parentPropertyName", propertyNameInput.text);
+            PlayerPrefs.SetString("childPropertyName", childPropertyNameInput.text);
             SceneManager.LoadScene("parentDashboard");
         }
         else

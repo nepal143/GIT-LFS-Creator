@@ -44,12 +44,12 @@ public class APIManager : MonoBehaviour
     }
     public void CreateChildProperty(string organisationName, string parentPropertyName, string childPropertyName, Action<string> callback)
     {
-        StartCoroutine(CreateChildCoroutine(organisationName, parentPropertyName ,callback));
+        StartCoroutine(CreateChildCoroutine(organisationName,childPropertyName, parentPropertyName ,callback));
     }
 
-    private IEnumerator CreateChildCoroutine(string organisationName, string childPropertyName, Action<string> callback)
+    private IEnumerator CreateChildCoroutine(string organisationName, string parentProperty , string childPropertyName , Action<string> callback)
     {
-        ChildPropertyCreateData propertyData = new ChildPropertyCreateData(organisationName, childPropertyName);
+        ChildPropertyCreateData propertyData = new ChildPropertyCreateData(organisationName,childPropertyName,parentProperty );
         string jsonData = JsonUtility.ToJson(propertyData);
 
         using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}childproperty/create-property", "POST"))
@@ -263,10 +263,13 @@ public class APIManager : MonoBehaviour
         public string organisationName;
         public string parentPropertyName;
 
-        public ChildPropertyCreateData(string organisationName, string parentPropertyName)
+        public string childPropertyName;
+
+        public ChildPropertyCreateData(string organisationName, string parentPropertyName   , string childPropertyName)
         {
             this.organisationName = organisationName;
             this.parentPropertyName = parentPropertyName;
+            this.childPropertyName = childPropertyName;
         }
     }
 
