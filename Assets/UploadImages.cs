@@ -2,44 +2,57 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using SFB; // Standalone File Browser namespace
-using TMPro; // TextMeshPro namespace
+using SFB; 
+using TMPro; 
 
 public class AWSImageUploader : MonoBehaviour
 {
-    public Button uploadButton;
-    public Button uploadMultipleButton; // New button for uploading multiple images
+    public Button uploadThumbnailButton;
+    public Button uploadMultipleImagesButton;
+    public Button uploadVideoButton;
     public Button saveButton;
-    public TMP_Text filePathsText; // Text component to display file paths
-    public SaveToAWS saveToAWS; // Reference to SaveToAWS script
+    public TMP_Text filePathsText; 
+    public ParentPropertySaveToAWS saveToAWS; 
 
-    [SerializeField]
-    private string folderName = "Thumbnail"; // Folder name to be set in the Inspector
+    private string thumbnailFilePath;
+    private List<string> imageFilePaths = new List<string>();
+    private string videoFilePath;
 
-    private List<Texture2D> uploadedTextures = new List<Texture2D>(); // List to hold multiple textures
-    private List<string> uploadedFilePaths = new List<string>(); // List to hold multiple file paths
-
-    void Start()
+void Start()
+{
+    // Ensure the button references are not null before adding listeners
+    if (uploadThumbnailButton != null)
     {
-        uploadButton.onClick.AddListener(OpenFileBrowser);
-        uploadMultipleButton.onClick.AddListener(OpenMultipleFileBrowser); // Add listener for new button
-        saveButton.onClick.AddListener(SaveImagesToAWS);
+        uploadThumbnailButton.onClick.AddListener(OpenThumbnailFileBrowser);
     }
 
-    private void OpenFileBrowser()
+    if (uploadMultipleImagesButton != null)
+    {
+        uploadMultipleImagesButton.onClick.AddListener(OpenMultipleImagesFileBrowser);
+    }
+
+    if (uploadVideoButton != null)
+    {
+        uploadVideoButton.onClick.AddListener(OpenVideoFileBrowser);
+    }
+
+    if (saveButton != null)
+    {
+        saveButton.onClick.AddListener(SaveAssetsToAWS);
+    }
+}
+
+    private void OpenThumbnailFileBrowser()
     {
         var extensions = new[] {
             new ExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp", "gif"),
             new ExtensionFilter("All Files", "*"),
         };
-        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Image File", "", extensions, false);
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Thumbnail Image", "", extensions, false);
 
         if (paths != null && paths.Length > 0)
         {
-            uploadedFilePaths.Clear();
-            uploadedFilePaths.Add(paths[0]);
-            filePathsText.text = "Selected File: " + paths[0]; // Display the selected file path
-            StartCoroutine(LoadTexturesFromFiles(paths));
+            thumbnailFilePath = paths[0];// Display the selected file path
         }
         else
         {
@@ -47,7 +60,7 @@ public class AWSImageUploader : MonoBehaviour
         }
     }
 
-    private void OpenMultipleFileBrowser()
+    private void OpenMultipleImagesFileBrowser()
     {
         var extensions = new[] {
             new ExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp", "gif"),
@@ -57,10 +70,9 @@ public class AWSImageUploader : MonoBehaviour
 
         if (paths != null && paths.Length > 0)
         {
-            uploadedFilePaths.Clear();
-            uploadedFilePaths.AddRange(paths); 
-            filePathsText.text = "Selected Files:\n" + string.Join("\n", paths); 
-            StartCoroutine(LoadTexturesFromFiles(paths));
+            imageFilePaths.Clear();
+            imageFilePaths.AddRange(paths);
+            filePathsText.text = "Selected Images:\n" + string.Join("\n", paths);
         }
         else
         {
@@ -68,34 +80,40 @@ public class AWSImageUploader : MonoBehaviour
         }
     }
 
-    private IEnumerator LoadTexturesFromFiles(string[] filePaths)
+    private void OpenVideoFileBrowser()
     {
-        uploadedTextures.Clear();
+        var extensions = new[] {
+            new ExtensionFilter("Video Files", "mp4", "mov", "wmv", "avi", "mkv"),
+            new ExtensionFilter("All Files", "*"),
+        };
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Open Video File", "", extensions, false);
 
-        foreach (string filePath in filePaths)
+        if (paths != null && paths.Length > 0)
         {
-            byte[] fileData = System.IO.File.ReadAllBytes(filePath);
-            Texture2D texture = new Texture2D(2, 2);
-            texture.LoadImage(fileData);
-            uploadedTextures.Add(texture);
-
-            yield return null;
-        }
-    }
-
-    private void SaveImagesToAWS()
-    {
-        if (uploadedTextures.Count == 1)
-        {
-            saveToAWS.UploadSingleImageToAWS(uploadedTextures[0], folderName);
-        }
-        else if (uploadedTextures.Count > 0)
-        {
-            saveToAWS.UploadMultipleImagesToAWS(uploadedTextures, folderName);
+            videoFilePath = paths[0];
+            filePathsText.text = "Selected Video: " + paths[0];
         }
         else
         {
-            Debug.LogError("No textures to upload.");
+            Debug.Log("No file selected.");
+        }
+    }
+
+    private void SaveAssetsToAWS()
+    {
+        if (!string.IsNullOrEmpty(thumbnailFilePath))
+        {
+            saveToAWS.UploadSingleFileToAWS(thumbnailFilePath, "thumbnails");
+        }
+
+        if (imageFilePaths.Count > 0)
+        {
+            saveToAWS.UploadMultipleFilesToAWS(imageFilePaths, "images");
+        }
+
+        if (!string.IsNullOrEmpty(videoFilePath))
+        {
+            saveToAWS.UploadSingleFileToAWS(videoFilePath, "videos");
         }
     }
 }
