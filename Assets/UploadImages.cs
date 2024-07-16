@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
 using TMPro; // TextMeshPro namespace
 
@@ -59,8 +58,8 @@ public class AWSImageUploader : MonoBehaviour
         if (paths != null && paths.Length > 0)
         {
             uploadedFilePaths.Clear();
-            uploadedFilePaths.AddRange(paths); // Add paths to the list
-            filePathsText.text = "Selected Files:\n" + string.Join("\n", paths); // Display the selected file paths
+            uploadedFilePaths.AddRange(paths); 
+            filePathsText.text = "Selected Files:\n" + string.Join("\n", paths); 
             StartCoroutine(LoadTexturesFromFiles(paths));
         }
         else

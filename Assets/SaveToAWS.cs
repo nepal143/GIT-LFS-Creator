@@ -10,9 +10,10 @@ public class SaveToAWS : MonoBehaviour
     public string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
     [SerializeField]
     private string folderName = "PanoramaImages"; // Default folder name in S3
-
+    public ImageUploader imageUploader;
     private string username;
     private string propertyName;
+    private int imageIndex = 1;
 
     void Start()
     {
@@ -20,7 +21,44 @@ public class SaveToAWS : MonoBehaviour
         propertyName = PlayerPrefs.GetString("propertyName", "");
         Debug.Log(username + " " + propertyName);
     }
+    public void UploadToAWS()
+    {
+        StartCoroutine(UploadImagesToS3Panaroma());
+        RecordSceneData();
+    }
+    private IEnumerator UploadImagesToS3Panaroma()
+    {
+        foreach (Texture2D texture in imageUploader.uploadedTextures)
+        {
+            byte[] textureBytes = texture.EncodeToPNG();
+            string textureName = $"{imageIndex}.png"; // Naming convention: 1.png, 2.png, 3.png, ...
 
+            WWWForm form = new WWWForm();
+            form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
+            form.AddField("parentPropertyName", PlayerPrefs.GetString("parentPropertyName"));
+            form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
+            form.AddBinaryData("file", textureBytes, textureName, "image/png");
+
+            string fullUrl = $"http://localhost:3000/upload-image-panaroma";
+            Debug.Log("Uploading to URL: " + fullUrl);
+
+            using (UnityWebRequest request = UnityWebRequest.Post(fullUrl, form))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogError($"Error uploading texture {textureName}: {request.error}");
+                }
+                else
+                {
+                    Debug.Log($"Texture {textureName} uploaded successfully.");
+                    Debug.Log("Response: " + request.downloadHandler.text);
+                    imageIndex++; // Increment index for the next image
+                }
+            }
+        }
+    }
     public void UploadSingleImageToAWS(Texture2D texture, string folderName)
     {
         StartCoroutine(UploadImageToS3(texture, folderName));
@@ -202,11 +240,12 @@ public class SaveToAWS : MonoBehaviour
         }
 
         WWWForm form = new WWWForm();
-        form.AddField("username", username);
-        form.AddField("propertyName", propertyName);
+       form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
+            form.AddField("parentPropertyName", PlayerPrefs.GetString("parentPropertyName"));
+            form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
         form.AddField("hotspots", json); // Send scene data JSON as 'hotspots'
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/save-positions-rotations", form))
+        using (UnityWebRequest request = UnityWebRequest.Post($"http://localhost:3000/save-positions-rotations", form))
         {
             yield return request.SendWebRequest();
 
