@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using TMPro; // Add TextMeshPro namespace
+using UnityEngine.UI; // Add UI namespace
+using UnityEngine.SceneManagement; // Add SceneManagement namespace
 
 public class FetchOrganisationData : MonoBehaviour
 {
     [SerializeField] private string baseUrl = "http://localhost:3000"; // Replace with your server URL
-    private string organisationName ; // Replace with the organisation name
+    private string organisationName; // Replace with the organisation name
     [SerializeField] private TextMeshProUGUI organisationNameTextObject; // Drag the new TextMeshPro object here in the Inspector
     [SerializeField] private GameObject usernamesContainer; // Drag the UsernamesContainer here in the Inspector
     [SerializeField] private GameObject propertiesContainer; // Drag the PropertiesContainer here in the Inspector
     [SerializeField] private TextMeshProUGUI textPrefab; // Drag the TextMeshPro prefab here in the Inspector
+    [SerializeField] private Button buttonPrefab; // Drag the Button prefab here in the Inspector
 
     void Start()
     {
@@ -23,6 +26,7 @@ public class FetchOrganisationData : MonoBehaviour
     {
         StartCoroutine(GetOrganisationDetails(organisationName));
     }
+
     IEnumerator GetOrganisationDetails(string organisationName)
     {
         string url = $"{baseUrl}/organisation/organisation/{organisationName}";
@@ -71,53 +75,56 @@ public class FetchOrganisationData : MonoBehaviour
     }
 
     void DisplayUsernamesAndProperties(List<string> usernames, List<string> properties)
-{
-    if (usernamesContainer == null || propertiesContainer == null || textPrefab == null)
     {
-        Debug.LogError("Containers or text prefab not assigned.");
-        return;
-    }
-
-    // Clear existing children
-    ClearContainer(usernamesContainer);
-    ClearContainer(propertiesContainer);
-
-    // Display usernames
-    if (usernames != null)
-    {
-        foreach (string username in usernames)
+        if (usernamesContainer == null || propertiesContainer == null || textPrefab == null || buttonPrefab == null)
         {
-            TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernamesContainer.transform);
-            newTextMeshPro.text = username;
+            Debug.LogError("Containers, text prefab, or button prefab not assigned.");
+            return;
+        }
 
-            // Optional: Adjust position using RectTransform
-            RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(0,rt.sizeDelta.y * usernames.IndexOf(username)); // Adjust position based on index
+        // Clear existing children
+        ClearContainer(usernamesContainer);
+        ClearContainer(propertiesContainer);
+
+        // Display usernames
+        if (usernames != null)
+        {
+            foreach (string username in usernames)
+            {
+                TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernamesContainer.transform);
+                newTextMeshPro.text = username;
+
+                // Optional: Adjust position using RectTransform
+                RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
+                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * usernames.IndexOf(username)); // Adjust position based on index
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Usernames list is null.");
+        }
+
+        // Display properties using buttons
+        if (properties != null)
+        {
+            foreach (string property in properties)
+            {
+                Button newButton = Instantiate(buttonPrefab, propertiesContainer.transform);
+                newButton.GetComponentInChildren<TextMeshProUGUI>().text = property;
+
+                // Add listener to handle button click
+                newButton.onClick.AddListener(() => OnPropertyButtonClick(property));
+
+                // Optional: Adjust position using RectTransform
+                RectTransform rt = newButton.GetComponent<RectTransform>();
+                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * properties.IndexOf(property)); // Adjust position based on index
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Properties list is null.");
         }
     }
-    else
-    {
-        Debug.LogWarning("Usernames list is null.");
-    }
-
-    // Display properties
-    if (properties != null)
-    {
-        foreach (string property in properties)
-        {
-            TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, propertiesContainer.transform);
-            newTextMeshPro.text = property;
-
-            // Optional: Adjust position using RectTransform
-            RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * properties.IndexOf(property)); // Adjust position based on index
-        }
-    }
-    else
-    {
-        Debug.LogWarning("Properties list is null.");
-    }
-}
 
     void ClearContainer(GameObject container)
     {
@@ -125,6 +132,12 @@ public class FetchOrganisationData : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+    }
+
+    void OnPropertyButtonClick(string propertyName)
+    {
+        PlayerPrefs.SetString("parentPropertyName", propertyName);
+        SceneManager.LoadScene("parentDashboard");
     }
 }
 

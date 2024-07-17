@@ -599,7 +599,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &201263478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -984,6 +984,7 @@ MonoBehaviour:
   usernamesContainer: {fileID: 0}
   propertiesContainer: {fileID: 0}
   textPrefab: {fileID: 0}
+  buttonPrefab: {fileID: 0}
 --- !u!1 &529319459
 GameObject:
   m_ObjectHideFlags: 0
@@ -3163,6 +3164,7 @@ MonoBehaviour:
   usernamesContainer: {fileID: 1762675656}
   propertiesContainer: {fileID: 1356509327}
   textPrefab: {fileID: 2018346614608697936, guid: 4a348864520539544929d5a9362d62d2, type: 3}
+  buttonPrefab: {fileID: 4727956562043614300, guid: a636ce0a3f746bd4a9e2c7d4171f170d, type: 3}
 --- !u!4 &1507165605
 Transform:
   m_ObjectHideFlags: 0
@@ -3527,7 +3529,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1766504971
 MonoBehaviour:
   m_ObjectHideFlags: 0
