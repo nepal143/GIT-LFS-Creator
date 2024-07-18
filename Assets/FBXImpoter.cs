@@ -6,7 +6,9 @@ using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
 using TMPro; // Include TextMeshPro namespace
 using Dummiesman; // Include Dummiesman namespace
-
+using UnityEngine.Networking;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 public class ModelImporterWithFileBrowser : MonoBehaviour
 {
     public Button importButton;
@@ -20,16 +22,19 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public GameObject loadingPanel;
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
-    private string baseUrl = "http://localhost:3000"; // Adjust base URL as needed
+    private string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
 
     private Shader standardShader;
 
     // Temporary variables for username and property name
     private string username;
     private string propertyName;
+    private string childPropertyName;
 
     void Start()
     {
+       childPropertyName = PlayerPrefs.GetString("childPropertyName");
+       Debug.Log(childPropertyName);
         Debug.Log("Script started.");
 
         // Retrieve saved username and property name
@@ -61,6 +66,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         {
             Debug.Log("Standard shader loaded successfully.");
         }
+        
     }
 
     public void OpenFileBrowser()
@@ -127,7 +133,9 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
 
             // Trigger upload to server
-            StartCoroutine(TriggerUploadToServer(path, username, propertyName));
+            
+            StartCoroutine(TriggerUploadToServer(path , childPropertyName));
+            Debug.Log(path) ; 
 
             // Change screen to DollHouse mode
             ChangeScreenForDollHouse();
@@ -165,30 +173,35 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         return path.IndexOfAny(invalidChars) == -1;
     }
 
-    IEnumerator TriggerUploadToServer(string filePath, string username, string propertyName)
+    IEnumerator TriggerUploadToServer(string filePath, string ChildPropertyName )  
     {
+        Debug.Log("starting uploading") ; 
         ShowLoading("Uploading to server...");
 
         // Prepare form data
         WWWForm form = new WWWForm();
         form.AddField("directoryPath", Path.GetDirectoryName(filePath)); // Send directory path
-        form.AddField("username", username); // Send username
-        form.AddField("propertyName", propertyName); // Send property name
+        form.AddField("organisationName", PlayerPrefs.GetString("organisationName") ); // Send organisationName
+        form.AddField("parentpropertyName",  PlayerPrefs.GetString("parentPropertyName")); // Send property name
+        form.AddField("childPropertyName", ChildPropertyName);
+
 
         // Send request to server
-        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/upload", form))
+        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload", form))
         {
             yield return request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
             {
                 Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
+                Debug.Log("error") ; 
             }
             else
             {
                 Debug.Log("Files uploaded successfully.");
                 Debug.Log("Response: " + request.downloadHandler.text);
             }
+
         }
 
         HideLoading();

@@ -1,28 +1,67 @@
 using UnityEngine;
-using TMPro;
-using System;
+using System.Collections;
+using TMPro; // Import TextMeshPro namespace
+using UnityApiNamespaceForRegister; // Import the new namespace for ApiManagerForRegister
 
-public class UserRegistrationUI : MonoBehaviour
+namespace UnityUiNamespace
 {
-    public APIManager apiManager;
-
-    [SerializeField] private TMP_InputField usernameField;
-    [SerializeField] private TMP_InputField phoneNumberField;
-    [SerializeField] private TMP_InputField passwordField;
-
-    public void RegisterUser()
+    public class UITrigger : MonoBehaviour
     {
-        string username = usernameField.text;
-        string phoneNumber = phoneNumberField.text;
-        string password = passwordField.text;
+        public TMP_InputField usernameInput;
+        public TMP_InputField phoneNumberInput;
+        public TMP_InputField passwordInput;
+        public ApiManagerForRegister apiManagerForRegister; // Take ApiManagerForRegister as an input field
 
-        Action<string> callback = OnRegistrationComplete;
+        private string organisationName; // To store organisation name
 
-        apiManager.RegisterUser(username, phoneNumber, password, callback);
-    }
+        void Start()
+        {
+            // Verify if components are assigned
+            if (usernameInput == null || phoneNumberInput == null || passwordInput == null || apiManagerForRegister == null)
+            {
+                Debug.LogError("One or more input fields or ApiManagerForRegister are not assigned in the Inspector.");
+                return;
+            }
 
-    private void OnRegistrationComplete(string response)
-    {
-        Debug.Log("Registration response: " + response);
+            organisationName = PlayerPrefs.GetString("organisationName");
+            if (string.IsNullOrEmpty(organisationName))
+            {
+                Debug.LogWarning("OrganisationName not found in PlayerPrefs.");
+            }
+        }
+
+        // Trigger to register a new user
+        public void OnRegisterUser()
+        {
+            string username = usernameInput.text.Trim();
+            string phoneNumber = phoneNumberInput.text.Trim();
+            string password = passwordInput.text;
+            string role = "Creator"; // Assuming role is predefined for registration
+
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(phoneNumber) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(role))
+            {
+                StartCoroutine(apiManagerForRegister.RegisterUser(username, phoneNumber, password, role, organisationName)); // Pass organisationName to RegisterUser
+            }
+            else
+            {
+                Debug.LogWarning("Please fill in all fields");
+            }
+        }
+
+        // Trigger to verify user's phone number
+        public void OnVerifyPhoneNumber()
+        {
+            string phoneNumber = phoneNumberInput.text.Trim();
+            string verificationCode = "123456"; // Replace with actual verification code input from UI
+
+            if (!string.IsNullOrEmpty(phoneNumber) && !string.IsNullOrEmpty(verificationCode))
+            {
+                StartCoroutine(apiManagerForRegister.VerifyPhoneNumber(phoneNumber, verificationCode));
+            }
+            else
+            {
+                Debug.LogWarning("Please enter phone number and verification code");
+            }
+        }
     }
 }
