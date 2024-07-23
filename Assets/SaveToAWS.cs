@@ -4,6 +4,7 @@ using System.Collections;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
+using UnityEngine.SceneManagement;
 
 public class SaveToAWS : MonoBehaviour
 {
@@ -58,6 +59,7 @@ public class SaveToAWS : MonoBehaviour
                 }
             }
         }
+         SceneManager.LoadScene("parentDashboard");
     }
     public void UploadSingleImageToAWS(Texture2D texture, string folderName)
     {
