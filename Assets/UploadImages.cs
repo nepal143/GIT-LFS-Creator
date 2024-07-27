@@ -11,36 +11,38 @@ public class AWSImageUploader : MonoBehaviour
     public Button uploadMultipleImagesButton;
     public Button uploadVideoButton;
     public Button saveButton;
-    public TMP_Text filePathsText; 
+    public TMP_Text thumbnailFilePathText; // Container for thumbnail file path
+    public TMP_Text filePathsText; // Container for multiple image file paths
+    public TMP_Text videoFilePathText; // Container for video file path
     public ParentPropertySaveToAWS saveToAWS; 
 
     private string thumbnailFilePath;
     private List<string> imageFilePaths = new List<string>();
     private string videoFilePath;
 
-void Start()
-{
-    // Ensure the button references are not null before adding listeners
-    if (uploadThumbnailButton != null)
+    void Start()
     {
-        uploadThumbnailButton.onClick.AddListener(OpenThumbnailFileBrowser);
-    }
+        // Ensure the button references are not null before adding listeners
+        if (uploadThumbnailButton != null)
+        {
+            uploadThumbnailButton.onClick.AddListener(OpenThumbnailFileBrowser);
+        }
 
-    if (uploadMultipleImagesButton != null)
-    {
-        uploadMultipleImagesButton.onClick.AddListener(OpenMultipleImagesFileBrowser);
-    }
+        if (uploadMultipleImagesButton != null)
+        {
+            uploadMultipleImagesButton.onClick.AddListener(OpenMultipleImagesFileBrowser);
+        }
 
-    if (uploadVideoButton != null)
-    {
-        uploadVideoButton.onClick.AddListener(OpenVideoFileBrowser);
-    }
+        if (uploadVideoButton != null)
+        {
+            uploadVideoButton.onClick.AddListener(OpenVideoFileBrowser);
+        }
 
-    if (saveButton != null)
-    {
-        saveButton.onClick.AddListener(SaveAssetsToAWS);
+        if (saveButton != null)
+        {
+            saveButton.onClick.AddListener(SaveAssetsToAWS);
+        }
     }
-}
 
     private void OpenThumbnailFileBrowser()
     {
@@ -52,7 +54,8 @@ void Start()
 
         if (paths != null && paths.Length > 0)
         {
-            thumbnailFilePath = paths[0];// Display the selected file path
+            thumbnailFilePath = paths[0];
+            thumbnailFilePathText.text = "Selected Thumbnail: " + paths[0]; // Display the selected file path
         }
         else
         {
@@ -91,7 +94,7 @@ void Start()
         if (paths != null && paths.Length > 0)
         {
             videoFilePath = paths[0];
-            filePathsText.text = "Selected Video: " + paths[0];
+            videoFilePathText.text = "Selected Video: " + paths[0]; // Display the selected video file path
         }
         else
         {
