@@ -44,7 +44,11 @@ public class ImageUploader : MonoBehaviour
         if (paths != null && paths.Length > 0)
         {
             string path = paths[0];
-            StartCoroutine(UploadImageToServer(path));
+            byte[] fileData = File.ReadAllBytes(path);
+            Texture2D texture = new Texture2D(2, 2);
+            texture.LoadImage(fileData);
+            DisplayImage(texture);
+            uploadedTextures.Add(texture);
         }
         else
         {
@@ -55,32 +59,38 @@ public class ImageUploader : MonoBehaviour
     private IEnumerator UploadImageToServer(string path)
     {
         byte[] fileData = File.ReadAllBytes(path);
-        WWWForm form = new WWWForm();
-        form.AddField("organisationName", username);
-        form.AddField("parentPropertyName", propertyName);
-        form.AddField("childPropertyName", "defaultChild"); // Adjust as needed
+        string fileName = Path.GetFileName(path);
+        string fileType = "image/png"; // Adjust MIME type as needed
 
-        // Add file data
-        form.AddBinaryData("file", fileData, Path.GetFileName(path), "image/png"); // Adjust MIME type as needed
+        List<IMultipartFormSection> formData = new List<IMultipartFormSection>
+    {
+        new MultipartFormDataSection("organisationName", username),
+        new MultipartFormDataSection("parentPropertyName", propertyName),
+        new MultipartFormDataSection("childPropertyName", "defaultChild"),
+        new MultipartFormFileSection("file", fileData, fileName, fileType)
+    };
 
-        using (UnityWebRequest www = UnityWebRequest.Post(UPLOAD_URL, form))
+        UnityWebRequest www = UnityWebRequest.Post(UPLOAD_URL, formData);
+
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
         {
-            yield return www.SendWebRequest();
+            Debug.LogError("Failed to upload image to server: " + www.error);
+            Texture2D texture = new Texture2D(2, 2);
+            DisplayImage(texture);
+        }
+        else
+        {
+            Debug.Log("Image uploaded successfully: " + www.downloadHandler.text);
 
-            if (www.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError("Failed to upload image to server: " + www.error);
-            }
-            else
-            {
-                Debug.Log("Image uploaded successfully: " + www.downloadHandler.text);
-
-                // Optionally, handle response if needed (e.g., add texture to list)
-                // Here we are simply logging the success
-            }
+            // Load the uploaded image as a texture and display it
+            Texture2D texture = new Texture2D(2, 2);
+            texture.LoadImage(fileData);
+            uploadedTextures.Add(texture);
+            DisplayImage(texture);
         }
     }
-
     public void DisplayImage(Texture2D texture)
     {
         GameObject imageObj = Instantiate(rawImagePrefab, imageGridContainer);
@@ -88,7 +98,6 @@ public class ImageUploader : MonoBehaviour
         if (rawImage != null)
         {
             rawImage.texture = texture;
-            rawImage.transform.SetParent(imageObj.transform.GetChild(0));
             displayedImages.Add(imageObj);
         }
         else

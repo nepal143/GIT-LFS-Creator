@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement; // Add SceneManagement namespace
 
 public class FetchOrganisationData : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "https://theserver-tp6r.onrender.com"; // Replace with your server URL
+    private string baseUrl = "https://theserver-tp6r.onrender.com"; // Replace with your server URL
     private string organisationName; // Replace with the organisation name
     [SerializeField] private TextMeshProUGUI organisationNameTextObject; // Drag the new TextMeshPro object here in the Inspector
     [SerializeField] private GameObject usernamesContainer; // Drag the UsernamesContainer here in the Inspector
@@ -27,36 +27,36 @@ public class FetchOrganisationData : MonoBehaviour
         StartCoroutine(GetOrganisationDetails(organisationName));
     }
 
-    IEnumerator GetOrganisationDetails(string organisationName)
+   IEnumerator GetOrganisationDetails(string organisationName)
+{
+    string url = $"{baseUrl}/organisation/organisation/{organisationName}";
+    Debug.Log($"Request URL: {url}");
+
+    using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
     {
-        string url = $"{baseUrl}/organisation/organisation/{organisationName}";
-        Debug.Log($"Request URL: {url}");
+        // Send the request and wait for a response
+        yield return webRequest.SendWebRequest();
 
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError || webRequest.result == UnityWebRequest.Result.DataProcessingError)
         {
-            // Send the request and wait for a response
-            yield return webRequest.SendWebRequest();
+            Debug.LogError($"Error fetching organisation details: {webRequest.error}");
+            Debug.LogError($"Response Code: {webRequest.responseCode}");
+            Debug.LogError($"Response: {webRequest.downloadHandler.text}");
+        }
+        else
+        {
+            // Process the response
+            string jsonResponse = webRequest.downloadHandler.text;
+            Debug.Log($"Organisation details: {jsonResponse}");
 
-            if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError || webRequest.result == UnityWebRequest.Result.DataProcessingError)
-            {
-                Debug.LogError($"Error fetching organisation details: {webRequest.error}");
-                Debug.LogError($"Response Code: {webRequest.responseCode}");
-                Debug.LogError($"Response: {webRequest.downloadHandler.text}");
-            }
-            else
-            {
-                // Process the response
-                string jsonResponse = webRequest.downloadHandler.text;
-                Debug.Log($"Organisation details: {jsonResponse}");
+            // Deserialize the JSON response into a C# object
+            Organisation organisation = JsonUtility.FromJson<Organisation>(jsonResponse);
 
-                // Deserialize the JSON response into a C# object
-                Organisation organisation = JsonUtility.FromJson<Organisation>(jsonResponse);
-
-                // Display the organisation name, usernames, and properties
-                DisplayOrganisationDetails(organisation.OrganisationName, organisation.Usernames, organisation.Properties);
-            }
+            // Display the organisation name, usernames, and properties
+            DisplayOrganisationDetails(organisation.OrganisationName, organisation.Usernames, organisation.Properties);
         }
     }
+}
 
     void DisplayOrganisationDetails(string organisationName, List<string> usernames, List<string> properties)
     {
