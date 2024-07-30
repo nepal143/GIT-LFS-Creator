@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 public class ObjAPIManager : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/user"; // Adjust base URL as needed
+    private string baseUrl = "https://theserver-tp6r.onrender.com/user"; // Adjust base URL as needed
 
     public void UploadObjModel(byte[] modelData, Action<string> callback)
     {

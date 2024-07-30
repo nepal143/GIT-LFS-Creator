@@ -35,9 +35,9 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     {
         childPropertyName = PlayerPrefs.GetString("childPropertyName");
         Debug.Log("Child Property Name: " + childPropertyName);
-        
+
         username = PlayerPrefs.GetString("username", "");
-        propertyName = PlayerPrefs.GetString("propertyName", "");
+        propertyName = PlayerPrefs.GetString("parentPropertyName", "");
         Debug.Log("Username: " + username);
         Debug.Log("Property Name: " + propertyName);
 
@@ -123,7 +123,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             instantiatedModel.tag = dollHouseTag;
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
 
-            StartCoroutine(TriggerUploadToServer(path, childPropertyName));
+            // Start the upload coroutine and wait for it to finish
+            yield return StartCoroutine(TriggerUploadToServer(path, childPropertyName));
         }
         else
         {
@@ -131,6 +132,8 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         HideLoading();
+        // Change screen to DollHouse mode after all tasks are complete
+        ChangeScreenForDollHouse();
     }
 
     void ApplyShaderToModel(GameObject model, Shader shader)
@@ -157,48 +160,49 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         char[] invalidChars = Path.GetInvalidPathChars();
         return path.IndexOfAny(invalidChars) == -1;
     }
-public IEnumerator TriggerUploadToServer(string filePath, string childPropertyName)
-{
-    Debug.Log("Starting upload");
-    ShowLoading("Uploading to server...");
 
-    // Prepare form data
-    WWWForm form = new WWWForm();
-    form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
-    form.AddField("parentpropertyName", PlayerPrefs.GetString("parentPropertyName"));
-    form.AddField("childPropertyName", childPropertyName);
-
-    // Add the file
-    byte[] fileData = File.ReadAllBytes(filePath);
-    Debug.Log($"Read file: {filePath}, file size: {fileData.Length} bytes");
-
-    if (fileData == null || fileData.Length == 0)
+    public IEnumerator TriggerUploadToServer(string filePath, string childPropertyName)
     {
-        Debug.LogError("File data is null or empty. Check the file path and ensure the file is readable.");
+        Debug.Log("Starting upload");
+        ShowLoading("Uploading to server...");
+
+        // Prepare form data
+        WWWForm form = new WWWForm();
+        form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
+        form.AddField("parentpropertyName", PlayerPrefs.GetString("parentPropertyName"));
+        form.AddField("childPropertyName", childPropertyName);
+
+        // Add the file
+        byte[] fileData = File.ReadAllBytes(filePath);
+        Debug.Log($"Read file: {filePath}, file size: {fileData.Length} bytes");
+
+        if (fileData == null || fileData.Length == 0)
+        {
+            Debug.LogError("File data is null or empty. Check the file path and ensure the file is readable.");
+            HideLoading();
+            yield break;
+        }
+
+        form.AddBinaryData("model", fileData, Path.GetFileName(filePath), "application/octet-stream");
+
+        // Send request to server
+        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload", form))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
+            }
+            else
+            {
+                Debug.Log("Files uploaded successfully.");
+                Debug.Log("Response: " + request.downloadHandler.text);
+            }
+        }
+
         HideLoading();
-        yield break;
     }
-
-    form.AddBinaryData("model", fileData, Path.GetFileName(filePath), "application/octet-stream");
-
-    // Send request to server
-    using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload", form))
-    {
-        yield return request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-        {
-            Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
-        }
-        else
-        {
-            Debug.Log("Files uploaded successfully.");
-            Debug.Log("Response: " + request.downloadHandler.text);
-        }
-    }
-
-    HideLoading();
-}
 
     void ShowLoading(string message)
     {

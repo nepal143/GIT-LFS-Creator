@@ -6,7 +6,7 @@ namespace UnityApiNamespaceForRegister
 {
     public class ApiManagerForRegister : MonoBehaviour
     {
-        private string baseUrl = "http://localhost:3000"; // Replace with your actual server URL
+        private string baseUrl = "https://theserver-tp6r.onrender.com"; // Replace with your actual server URL
 
         // Register user
         public IEnumerator RegisterUser(string username, string phoneNumber, string password, string role, string organisationName)

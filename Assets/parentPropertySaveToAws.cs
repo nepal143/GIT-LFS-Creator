@@ -6,7 +6,7 @@ using System.IO;
 
 public class ParentPropertySaveToAWS : MonoBehaviour
 {
-    public string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
+    public string baseUrl = "https://theserver-tp6r.onrender.com/"; // Adjust base URL as needed
     private string username;
     private string propertyName;
 
@@ -40,7 +40,7 @@ public class ParentPropertySaveToAWS : MonoBehaviour
         form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
         form.AddBinaryData("file", fileBytes, fileName, "application/octet-stream");
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"http://localhost:3000/upload/upload-file/images", form))
+        using (UnityWebRequest request = UnityWebRequest.Post($"https://theserver-tp6r.onrender.com/upload/upload-file/images", form))
         {
             yield return request.SendWebRequest();
 

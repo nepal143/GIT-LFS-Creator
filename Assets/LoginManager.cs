@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class LoginManager : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/";
+    private string baseUrl = "https://theserver-tp6r.onrender.com/";
     private string jwtToken;
     private string storedUsername;
     private string organisationName;
