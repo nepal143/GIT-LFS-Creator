@@ -6,9 +6,9 @@ using UnityEngine.Networking;
 using SFB; // Standalone File Browser namespace
 using TMPro; // Include TextMeshPro namespace
 using Dummiesman; // Include Dummiesman namespace
-using UnityEngine.Networking;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+
 public class ModelImporterWithFileBrowser : MonoBehaviour
 {
     public Button importButton;
@@ -22,7 +22,7 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
     public GameObject loadingPanel;
     public TMP_Text loadingTextTMP; // Reference to TextMeshPro text
 
-    private string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
+    private string baseUrl = "https://theserver-tp6r.onrender.com/"; // Adjust base URL as needed
 
     private Shader standardShader;
 
@@ -33,20 +33,19 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
     void Start()
     {
-       childPropertyName = PlayerPrefs.GetString("childPropertyName");
-       Debug.Log(childPropertyName);
-        Debug.Log("Script started.");
-
-        // Retrieve saved username and property name
+        childPropertyName = PlayerPrefs.GetString("childPropertyName");
+        Debug.Log("Child Property Name: " + childPropertyName);
+        
         username = PlayerPrefs.GetString("username", "");
         propertyName = PlayerPrefs.GetString("propertyName", "");
+        Debug.Log("Username: " + username);
+        Debug.Log("Property Name: " + propertyName);
 
         if (importButton != null)
         {
             importButton.onClick.AddListener(OpenFileBrowser);
         }
 
-        // Hide loading panel and TMP text initially
         if (loadingPanel != null)
         {
             loadingPanel.SetActive(false);
@@ -56,7 +55,6 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             loadingTextTMP.gameObject.SetActive(false);
         }
 
-        // Load the standard shader
         standardShader = Shader.Find("Standard");
         if (standardShader == null)
         {
@@ -66,7 +64,6 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         {
             Debug.Log("Standard shader loaded successfully.");
         }
-        
     }
 
     public void OpenFileBrowser()
@@ -80,10 +77,6 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         {
             string path = paths[0];
             Debug.Log("File selected: " + path);
-
-            // Convert to absolute path for consistency
-            // path = Path.GetFullPath(path);
-
             StartCoroutine(LoadAndMoveOBJ(path));
         }
         else
@@ -101,7 +94,6 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         }
 
         ShowLoading("Loading OBJ...");
-
         Debug.Log("Loading OBJ from path: " + path);
 
         if (!IsValidPath(path))
@@ -127,18 +119,11 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
 
         if (objModel != null)
         {
-            // Instantiate the OBJ model
             GameObject instantiatedModel = Instantiate(objModel, spawnPoint.position, spawnPoint.rotation);
             instantiatedModel.tag = dollHouseTag;
             Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
 
-            // Trigger upload to server
-            
-            StartCoroutine(TriggerUploadToServer(path , childPropertyName));
-            Debug.Log(path) ; 
-
-            // Change screen to DollHouse mode
-            ChangeScreenForDollHouse();
+            StartCoroutine(TriggerUploadToServer(path, childPropertyName));
         }
         else
         {
@@ -172,40 +157,48 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
         char[] invalidChars = Path.GetInvalidPathChars();
         return path.IndexOfAny(invalidChars) == -1;
     }
+public IEnumerator TriggerUploadToServer(string filePath, string childPropertyName)
+{
+    Debug.Log("Starting upload");
+    ShowLoading("Uploading to server...");
 
-    IEnumerator TriggerUploadToServer(string filePath, string ChildPropertyName )  
+    // Prepare form data
+    WWWForm form = new WWWForm();
+    form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
+    form.AddField("parentpropertyName", PlayerPrefs.GetString("parentPropertyName"));
+    form.AddField("childPropertyName", childPropertyName);
+
+    // Add the file
+    byte[] fileData = File.ReadAllBytes(filePath);
+    Debug.Log($"Read file: {filePath}, file size: {fileData.Length} bytes");
+
+    if (fileData == null || fileData.Length == 0)
     {
-        Debug.Log("starting uploading") ; 
-        ShowLoading("Uploading to server...");
-
-        // Prepare form data
-        WWWForm form = new WWWForm();
-        form.AddField("directoryPath", Path.GetDirectoryName(filePath)); // Send directory path
-        form.AddField("organisationName", PlayerPrefs.GetString("organisationName") ); // Send organisationName
-        form.AddField("parentpropertyName",  PlayerPrefs.GetString("parentPropertyName")); // Send property name
-        form.AddField("childPropertyName", ChildPropertyName);
-
-
-        // Send request to server
-        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload", form))
-        {
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
-                Debug.Log("error") ; 
-            }
-            else
-            {
-                Debug.Log("Files uploaded successfully.");
-                Debug.Log("Response: " + request.downloadHandler.text);
-            }
-
-        }
-
+        Debug.LogError("File data is null or empty. Check the file path and ensure the file is readable.");
         HideLoading();
+        yield break;
     }
+
+    form.AddBinaryData("model", fileData, Path.GetFileName(filePath), "application/octet-stream");
+
+    // Send request to server
+    using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload", form))
+    {
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+        {
+            Debug.LogError($"Error: {request.error}, Response: {request.downloadHandler.text}");
+        }
+        else
+        {
+            Debug.Log("Files uploaded successfully.");
+            Debug.Log("Response: " + request.downloadHandler.text);
+        }
+    }
+
+    HideLoading();
+}
 
     void ShowLoading(string message)
     {

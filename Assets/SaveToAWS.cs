@@ -20,13 +20,25 @@ public class SaveToAWS : MonoBehaviour
     {
         username = PlayerPrefs.GetString("username", "");
         propertyName = PlayerPrefs.GetString("propertyName", "");
-        Debug.Log(username + " " + propertyName);
+
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(propertyName))
+        {
+            Debug.LogError("Username or PropertyName is null or empty. Please set these values.");
+        }
     }
+
     public void UploadToAWS()
     {
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(propertyName))
+        {
+            Debug.LogError("Username or PropertyName is null or empty. Cannot upload to AWS.");
+            return;
+        }
+
         StartCoroutine(UploadImagesToS3Panaroma());
         RecordSceneData();
     }
+
     private IEnumerator UploadImagesToS3Panaroma()
     {
         foreach (Texture2D texture in imageUploader.uploadedTextures)
@@ -40,7 +52,7 @@ public class SaveToAWS : MonoBehaviour
             form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
             form.AddBinaryData("file", textureBytes, textureName, "image/png");
 
-            string fullUrl = $"http://localhost:3000/upload-image-panaroma";
+            string fullUrl = $"{baseUrl}upload-image-panaroma";
             Debug.Log("Uploading to URL: " + fullUrl);
 
             using (UnityWebRequest request = UnityWebRequest.Post(fullUrl, form))
@@ -59,8 +71,9 @@ public class SaveToAWS : MonoBehaviour
                 }
             }
         }
-         SceneManager.LoadScene("parentDashboard");
+        SceneManager.LoadScene("parentDashboard");
     }
+
     public void UploadSingleImageToAWS(Texture2D texture, string folderName)
     {
         StartCoroutine(UploadImageToS3(texture, folderName));
@@ -234,7 +247,6 @@ public class SaveToAWS : MonoBehaviour
 
     private IEnumerator SaveSceneDataToS3(string json)
     {
-        // Ensure username and propertyName are not null or empty
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(propertyName))
         {
             Debug.LogError("Username or PropertyName is null or empty. Aborting scene data save.");
@@ -242,12 +254,12 @@ public class SaveToAWS : MonoBehaviour
         }
 
         WWWForm form = new WWWForm();
-       form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
-            form.AddField("parentPropertyName", PlayerPrefs.GetString("parentPropertyName"));
-            form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
+        form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
+        form.AddField("parentPropertyName", PlayerPrefs.GetString("parentPropertyName"));
+        form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
         form.AddField("hotspots", json); // Send scene data JSON as 'hotspots'
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"http://localhost:3000/save-positions-rotations", form))
+        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}save-positions-rotations", form))
         {
             yield return request.SendWebRequest();
 

@@ -19,10 +19,12 @@ public class ImageUploader : MonoBehaviour
     public float separationDistance = 10f;
     public List<Texture2D> uploadedTextures = new List<Texture2D>();
     public List<GameObject> displayedImages = new List<GameObject>();
-    public SaveToAWS saveToAWS; // Reference to SaveToAWS script
-    
-    private string username  ; // Temporary username
-    private string propertyName ; // Temporary property name
+
+    private string username; // Temporary username
+    private string propertyName; // Temporary property name
+
+    private const string UPLOAD_URL = "https://theserver-tp6r.onrender.com/upload-image"; // Replace with your server URL
+
     void Start()
     {
         username = PlayerPrefs.GetString("username", "");
@@ -42,7 +44,7 @@ public class ImageUploader : MonoBehaviour
         if (paths != null && paths.Length > 0)
         {
             string path = paths[0];
-            StartCoroutine(LoadTextureFromFile(path));
+            StartCoroutine(UploadImageToServer(path));
         }
         else
         {
@@ -50,32 +52,31 @@ public class ImageUploader : MonoBehaviour
         }
     }
 
-    private IEnumerator LoadTextureFromFile(string path)
+    private IEnumerator UploadImageToServer(string path)
     {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture("file://" + path))
-        {
-            yield return uwr.SendWebRequest();
+        byte[] fileData = File.ReadAllBytes(path);
+        WWWForm form = new WWWForm();
+        form.AddField("organisationName", username);
+        form.AddField("parentPropertyName", propertyName);
+        form.AddField("childPropertyName", "defaultChild"); // Adjust as needed
 
-            if (uwr.result != UnityWebRequest.Result.Success)
+        // Add file data
+        form.AddBinaryData("file", fileData, Path.GetFileName(path), "image/png"); // Adjust MIME type as needed
+
+        using (UnityWebRequest www = UnityWebRequest.Post(UPLOAD_URL, form))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Failed to load texture from file: " + uwr.error);
+                Debug.LogError("Failed to upload image to server: " + www.error);
             }
             else
             {
-                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                if (texture != null)
-                {
-                    DisplayImage(texture);
-                    uploadedTextures.Add(texture);
-                    Debug.Log("Texture added to uploadedTextures list. Count: " + uploadedTextures.Count);
+                Debug.Log("Image uploaded successfully: " + www.downloadHandler.text);
 
-                    // Trigger AWS upload via SaveToAWS script
-                    // saveToAWS.UploadToAWS();
-                }
-                else
-                {
-                    Debug.LogError("Failed to create texture from file!");
-                }
+                // Optionally, handle response if needed (e.g., add texture to list)
+                // Here we are simply logging the success
             }
         }
     }
@@ -144,22 +145,4 @@ public class ImageUploader : MonoBehaviour
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
 }
