@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class FetchChildProperties : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "http://localhost:3000"; // Replace with your server URL
+    [SerializeField] private string baseUrl = "https://theserver-tp6r.onrender.com"; // Replace with your server URL
     [SerializeField] private TextMeshProUGUI parentPropertyNameTextObject; // Drag the new TextMeshPro object here in the Inspector
     [SerializeField] private GameObject childPropertiesContainer; // Drag the ChildPropertiesContainer here in the Inspector
     [SerializeField] private GameObject buttonContainerPrefab; // Drag the Button container prefab here in the Inspector

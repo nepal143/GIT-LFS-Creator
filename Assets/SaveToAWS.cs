@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class SaveToAWS : MonoBehaviour
 {
-    public string baseUrl = "http://localhost:3000/"; // Adjust base URL as needed
+    public string baseUrl = "https://theserver-tp6r.onrender.com/"; // Adjust base URL as needed
     [SerializeField]
     private string folderName = "PanoramaImages"; // Default folder name in S3
     public ImageUploader imageUploader;

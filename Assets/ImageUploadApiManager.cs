@@ -5,7 +5,7 @@ using System.IO;
 
 public class ImageUploadApiManager : MonoBehaviour
 {
-    public string serverUrl = "http://localhost:3000/upload-image";
+    public string serverUrl = "https://theserver-tp6r.onrender.com/upload-image";
 
     public void UploadImage(string username, string propertyName, string folderName, string filePath, System.Action<string> callback)
     {

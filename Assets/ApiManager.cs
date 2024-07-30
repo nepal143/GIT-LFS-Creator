@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 public class APIManager : MonoBehaviour
 {
-    private string baseUrl = "http://localhost:3000/"; 
+    private string baseUrl = "https://theserver-tp6r.onrender.com/"; 
     private string userId;
     private string storedPhoneNumber;
 
