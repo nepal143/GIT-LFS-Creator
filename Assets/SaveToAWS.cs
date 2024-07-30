@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class SaveToAWS : MonoBehaviour
 {
-    public string baseUrl = "https://theserver-tp6r.onrender.com/"; // Adjust base URL as needed
+    private string baseUrl = "https://theserver-tp6r.onrender.com"; // Adjust base URL as needed
     [SerializeField]
     private string folderName = "PanoramaImages"; // Default folder name in S3
     public ImageUploader imageUploader;
@@ -18,8 +18,8 @@ public class SaveToAWS : MonoBehaviour
 
     void Start()
     {
-        username = PlayerPrefs.GetString("username", "");
-        propertyName = PlayerPrefs.GetString("propertyName", "");
+        username = PlayerPrefs.GetString("username");
+        propertyName = PlayerPrefs.GetString("childPropertyName");
 
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(propertyName))
         {
@@ -52,7 +52,7 @@ public class SaveToAWS : MonoBehaviour
             form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
             form.AddBinaryData("file", textureBytes, textureName, "image/png");
 
-            string fullUrl = $"{baseUrl}upload-image-panaroma";
+            string fullUrl = $"{baseUrl}/upload-image-panaroma";
             Debug.Log("Uploading to URL: " + fullUrl);
 
             using (UnityWebRequest request = UnityWebRequest.Post(fullUrl, form))
@@ -96,7 +96,7 @@ public class SaveToAWS : MonoBehaviour
         form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
         form.AddBinaryData("file", textureBytes, textureName, "image/png");
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload/upload-image", form))
+        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/upload/upload-image", form))
         {
             yield return request.SendWebRequest();
 
@@ -127,7 +127,7 @@ public class SaveToAWS : MonoBehaviour
             form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
             form.AddBinaryData("file", textureBytes, textureName, "image/png");
 
-            using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}upload/upload-image", form))
+            using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}/upload/upload-image", form))
             {
                 yield return request.SendWebRequest();
 
@@ -245,33 +245,47 @@ public class SaveToAWS : MonoBehaviour
         StartCoroutine(SaveSceneDataToS3(json));
     }
 
-    private IEnumerator SaveSceneDataToS3(string json)
+private IEnumerator SaveSceneDataToS3(string json)
+{
+    string organisationName = PlayerPrefs.GetString("organisationName");
+    string parentPropertyName = PlayerPrefs.GetString("parentPropertyName");
+    string childPropertyName = PlayerPrefs.GetString("childPropertyName");
+
+    if (string.IsNullOrEmpty(organisationName) || string.IsNullOrEmpty(parentPropertyName) || string.IsNullOrEmpty(childPropertyName))
     {
-        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(propertyName))
+        Debug.LogError("Organisation Name, Parent Property Name, or Child Property Name is null or empty. Aborting scene data save.");
+        yield break; // Exit coroutine early
+    }
+
+    // Create a JSON object to send
+    var jsonData = new
+    {
+        organisationName = organisationName,
+        parentPropertyName = parentPropertyName,
+        childPropertyName = childPropertyName,
+        hotspots = json
+    };
+
+    string jsonPayload = JsonUtility.ToJson(jsonData);
+
+    using (UnityWebRequest request = new UnityWebRequest($"{baseUrl}/save-positions-rotations", "POST"))
+    {
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError("Username or PropertyName is null or empty. Aborting scene data save.");
-            yield break; // Exit coroutine early
+            Debug.LogError($"Error saving scene data: {request.error}");
         }
-
-        WWWForm form = new WWWForm();
-        form.AddField("organisationName", PlayerPrefs.GetString("organisationName"));
-        form.AddField("parentPropertyName", PlayerPrefs.GetString("parentPropertyName"));
-        form.AddField("childPropertyName", PlayerPrefs.GetString("childPropertyName"));
-        form.AddField("hotspots", json); // Send scene data JSON as 'hotspots'
-
-        using (UnityWebRequest request = UnityWebRequest.Post($"{baseUrl}save-positions-rotations", form))
+        else
         {
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError($"Error saving scene data: {request.error}");
-            }
-            else
-            {
-                Debug.Log("Scene data saved successfully.");
-                Debug.Log("Response: " + request.downloadHandler.text);
-            }
+            Debug.Log("Scene data saved successfully.");
+            Debug.Log("Response: " + request.downloadHandler.text);
         }
     }
+}
 }
