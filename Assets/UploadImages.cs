@@ -11,18 +11,22 @@ public class AWSImageUploader : MonoBehaviour
     public Button uploadMultipleImagesButton;
     public Button uploadVideoButton;
     public Button saveButton;
-    public TMP_Text thumbnailFilePathText; // Container for thumbnail file path
-    public TMP_Text filePathsText; // Container for multiple image file paths
-    public TMP_Text videoFilePathText; // Container for video file path
-    public ParentPropertySaveToAWS saveToAWS; 
+
+    public GameObject thumbnailContainer; // Container for single image preview
+    public GameObject multipleImagesContainer; // Container for multiple image previews
+    public GameObject imagePrefab; // Prefab with a RawImage component
+    public ParentPropertySaveToAWS saveToAWS;
 
     private string thumbnailFilePath;
     private List<string> imageFilePaths = new List<string>();
     private string videoFilePath;
 
+    // Maximum dimensions for the image preview
+    private const float maxPreviewWidth = 100f;
+    private const float maxPreviewHeight = 100f;
+
     void Start()
     {
-        // Ensure the button references are not null before adding listeners
         if (uploadThumbnailButton != null)
         {
             uploadThumbnailButton.onClick.AddListener(OpenThumbnailFileBrowser);
@@ -55,7 +59,7 @@ public class AWSImageUploader : MonoBehaviour
         if (paths != null && paths.Length > 0)
         {
             thumbnailFilePath = paths[0];
-            thumbnailFilePathText.text = "Selected Thumbnail: " + paths[0]; // Display the selected file path
+            StartCoroutine(LoadAndDisplayImage(paths[0], thumbnailContainer));
         }
         else
         {
@@ -75,7 +79,10 @@ public class AWSImageUploader : MonoBehaviour
         {
             imageFilePaths.Clear();
             imageFilePaths.AddRange(paths);
-            filePathsText.text = "Selected Images:\n" + string.Join("\n", paths);
+            foreach (string path in paths)
+            {
+                StartCoroutine(LoadAndDisplayImage(path, multipleImagesContainer));
+            }
         }
         else
         {
@@ -94,7 +101,6 @@ public class AWSImageUploader : MonoBehaviour
         if (paths != null && paths.Length > 0)
         {
             videoFilePath = paths[0];
-            videoFilePathText.text = "Selected Video: " + paths[0]; // Display the selected video file path
         }
         else
         {
@@ -118,5 +124,40 @@ public class AWSImageUploader : MonoBehaviour
         {
             saveToAWS.UploadSingleFileToAWS(videoFilePath, "videos");
         }
+    }
+
+    private IEnumerator LoadAndDisplayImage(string path, GameObject container)
+    {
+        // Load the image from file path
+        byte[] fileData = System.IO.File.ReadAllBytes(path);
+        Texture2D texture = new Texture2D(2, 2);
+        texture.LoadImage(fileData); // This will auto-resize the texture dimensions
+
+        // Instantiate a new image prefab and set the texture
+        GameObject newImage = Instantiate(imagePrefab, container.transform);
+        RawImage rawImage = newImage.GetComponent<RawImage>();
+        rawImage.texture = texture;
+
+        // Resize the image to fit within the specified max width and height
+        float aspectRatio = (float)texture.width / texture.height;
+        float width = texture.width;
+        float height = texture.height;
+
+        if (width > maxPreviewWidth || height > maxPreviewHeight)
+        {
+            if (width / maxPreviewWidth > height / maxPreviewHeight)
+            {
+                width = maxPreviewWidth;
+                height = width / aspectRatio;
+            }
+            else
+            {
+                height = maxPreviewHeight;
+                width = height * aspectRatio;
+            }
+        }
+
+        rawImage.rectTransform.sizeDelta = new Vector2(width, height);
+        yield return null;
     }
 }
