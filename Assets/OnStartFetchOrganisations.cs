@@ -1,76 +1,117 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using TMPro; // Add TextMeshPro namespace
-using UnityEngine.UI; // Add UI namespace
-using UnityEngine.SceneManagement; // Add SceneManagement namespace
+using TMPro;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class FetchOrganisationData : MonoBehaviour
 {
     private string baseUrl = "https://theserver-tp6r.onrender.com"; // Replace with your server URL
-    private string organisationName; // Replace with the organisation name
-    [SerializeField] private TextMeshProUGUI organisationNameTextObject; // Drag the new TextMeshPro object here in the Inspector
-    [SerializeField] private GameObject usernamesContainer; // Drag the UsernamesContainer here in the Inspector
-    [SerializeField] private GameObject propertiesContainer; // Drag the PropertiesContainer here in the Inspector
-    [SerializeField] private TextMeshProUGUI textPrefab; // Drag the TextMeshPro prefab here in the Inspector
-    [SerializeField] private Button buttonPrefab; // Drag the Button prefab here in the Inspector
+    private string organisationName;
+    private string currentUsername; // Current username of the logged-in user
+    [SerializeField] private TextMeshProUGUI organisationNameTextObject;
+    [SerializeField] private GameObject usernamesContainer;
+    [SerializeField] private GameObject propertiesContainer;
+    [SerializeField] private TextMeshProUGUI textPrefab;
+    [SerializeField] private Button buttonPrefab;
+    [SerializeField] private GameObject restrictedAccessObject; // Object to disable if not root user
+    [SerializeField] private GameObject centeredObject; // The UI element to center horizontally
 
     void Start()
     {
         organisationName = PlayerPrefs.GetString("organisationName");
+        currentUsername = PlayerPrefs.GetString("profileUsername"); // Get the current username from PlayerPrefs
+        Debug.Log($"Starting fetch for organisation: {organisationName}, current user: {currentUsername}");
+
         StartCoroutine(GetOrganisationDetails(organisationName));
     }
 
     public void OnClickFetchOrganisationData()
     {
+        Debug.Log("Fetch Organisation Data button clicked");
         StartCoroutine(GetOrganisationDetails(organisationName));
     }
 
-   IEnumerator GetOrganisationDetails(string organisationName)
-{
-    string url = $"{baseUrl}/organisation/organisation/{organisationName}";
-    Debug.Log($"Request URL: {url}");
-
-    using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+    IEnumerator GetOrganisationDetails(string organisationName)
     {
-        // Send the request and wait for a response
-        yield return webRequest.SendWebRequest();
+        string url = $"{baseUrl}/organisation/organisation/{organisationName}";
+        Debug.Log($"Requesting organisation details from URL: {url}");
 
-        if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError || webRequest.result == UnityWebRequest.Result.DataProcessingError)
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
-            Debug.LogError($"Error fetching organisation details: {webRequest.error}");
-            Debug.LogError($"Response Code: {webRequest.responseCode}");
-            Debug.LogError($"Response: {webRequest.downloadHandler.text}");
-        }
-        else
-        {
-            // Process the response
-            string jsonResponse = webRequest.downloadHandler.text;
-            Debug.Log($"Organisation details: {jsonResponse}");
+            yield return webRequest.SendWebRequest();
 
-            // Deserialize the JSON response into a C# object
-            Organisation organisation = JsonUtility.FromJson<Organisation>(jsonResponse);
+            if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError || webRequest.result == UnityWebRequest.Result.DataProcessingError)
+            {
+                Debug.LogError($"Error fetching organisation details: {webRequest.error}");
+                Debug.LogError($"Response Code: {webRequest.responseCode}");
+                Debug.LogError($"Response: {webRequest.downloadHandler.text}");
+            }
+            else
+            {
+                string jsonResponse = webRequest.downloadHandler.text;
+                Debug.Log($"Received organisation details: {jsonResponse}");
 
-            // Display the organisation name, usernames, and properties
-            DisplayOrganisationDetails(organisation.OrganisationName, organisation.Usernames, organisation.Properties);
+                Organisation organisation = JsonUtility.FromJson<Organisation>(jsonResponse);
+
+                // Debug information for organisation details
+                Debug.Log($"Organisation Name: {organisation.OrganisationName}");
+                Debug.Log($"Root Username: {organisation.RootUserName}");
+
+                DisplayOrganisationDetails(organisation.OrganisationName, organisation.Usernames, organisation.Properties);
+
+                // Disable the restricted access object if the current user is not the root user
+                if (currentUsername != organisation.RootUserName)
+                {
+                    Debug.Log("Current Username: " + currentUsername);
+                    Debug.Log("Current user is not the root user. Disabling restricted access object.");
+                    if (restrictedAccessObject != null)
+                    {
+                        restrictedAccessObject.SetActive(false);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Restricted access object is not assigned.");
+                    }
+
+                    // Center the additional UI element horizontally
+                    if (centeredObject != null)
+                    {
+                        RectTransform rectTransform = centeredObject.GetComponent<RectTransform>();
+                        rectTransform.anchorMin = new Vector2(0.5f, rectTransform.anchorMin.y);
+                        rectTransform.anchorMax = new Vector2(0.5f, rectTransform.anchorMax.y);
+                        rectTransform.anchoredPosition = new Vector2(0, rectTransform.anchoredPosition.y);
+                        Debug.Log("Centered the additional UI element horizontally.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Centered object is not assigned.");
+                    }
+                }
+                else
+                {
+                    Debug.Log("Current user is the root user. Restricted access object remains active.");
+                }
+            }
         }
     }
-}
 
     void DisplayOrganisationDetails(string organisationName, List<string> usernames, List<string> properties)
     {
-        // Display the organisation name using TextMeshPro
+        Debug.Log("Displaying organisation details");
         if (organisationNameTextObject != null)
         {
             organisationNameTextObject.text = organisationName;
+            Debug.Log($"Organisation Name displayed: {organisationName}");
         }
         else
         {
             Debug.LogWarning("Organisation Name TextMeshPro object not assigned.");
         }
 
-        // Display usernames and properties
         DisplayUsernamesAndProperties(usernames, properties);
     }
 
@@ -82,21 +123,20 @@ public class FetchOrganisationData : MonoBehaviour
             return;
         }
 
-        // Clear existing children
         ClearContainer(usernamesContainer);
         ClearContainer(propertiesContainer);
 
-        // Display usernames
         if (usernames != null)
         {
+            Debug.Log("Displaying usernames:");
             foreach (string username in usernames)
             {
+                Debug.Log($"Username: {username}");
                 TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernamesContainer.transform);
                 newTextMeshPro.text = username;
 
-                // Optional: Adjust position using RectTransform
                 RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
-                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * usernames.IndexOf(username)); // Adjust position based on index
+                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * usernames.IndexOf(username));
             }
         }
         else
@@ -104,20 +144,19 @@ public class FetchOrganisationData : MonoBehaviour
             Debug.LogWarning("Usernames list is null.");
         }
 
-        // Display properties using buttons
         if (properties != null)
         {
+            Debug.Log("Displaying properties:");
             foreach (string property in properties)
             {
+                Debug.Log($"Property: {property}");
                 Button newButton = Instantiate(buttonPrefab, propertiesContainer.transform);
                 newButton.GetComponentInChildren<TextMeshProUGUI>().text = property;
 
-                // Add listener to handle button click
                 newButton.onClick.AddListener(() => OnPropertyButtonClick(property));
 
-                // Optional: Adjust position using RectTransform
                 RectTransform rt = newButton.GetComponent<RectTransform>();
-                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * properties.IndexOf(property)); // Adjust position based on index
+                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * properties.IndexOf(property));
             }
         }
         else
@@ -128,6 +167,7 @@ public class FetchOrganisationData : MonoBehaviour
 
     void ClearContainer(GameObject container)
     {
+        Debug.Log($"Clearing container: {container.name}");
         foreach (Transform child in container.transform)
         {
             Destroy(child.gameObject);
@@ -136,12 +176,12 @@ public class FetchOrganisationData : MonoBehaviour
 
     void OnPropertyButtonClick(string propertyName)
     {
+        Debug.Log($"Property button clicked: {propertyName}");
         PlayerPrefs.SetString("parentPropertyName", propertyName);
         SceneManager.LoadScene("parentDashboard");
     }
 }
 
-// Define a class to match the JSON response structure if you want to deserialize it
 [System.Serializable]
 public class Organisation
 {
