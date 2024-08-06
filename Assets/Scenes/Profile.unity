@@ -1093,6 +1093,7 @@ MonoBehaviour:
   usernamesContainer: {fileID: 0}
   propertiesContainer: {fileID: 0}
   textPrefab: {fileID: 0}
+  deleteButtonPrefab: {fileID: 0}
   buttonPrefab: {fileID: 0}
   restrictedAccessObject: {fileID: 0}
   centeredObject: {fileID: 0}
@@ -3327,6 +3328,7 @@ MonoBehaviour:
   usernamesContainer: {fileID: 1762675656}
   propertiesContainer: {fileID: 1356509327}
   textPrefab: {fileID: 2018346614608697936, guid: 4a348864520539544929d5a9362d62d2, type: 3}
+  deleteButtonPrefab: {fileID: 3283836989945556793, guid: 79bac1e14740b044b8f10c3d22d4f96c, type: 3}
   buttonPrefab: {fileID: 4727956562043614300, guid: a636ce0a3f746bd4a9e2c7d4171f170d, type: 3}
   restrictedAccessObject: {fileID: 371876734}
   centeredObject: {fileID: 81803231}
@@ -3651,6 +3653,7 @@ GameObject:
   - component: {fileID: 1762675657}
   - component: {fileID: 1762675659}
   - component: {fileID: 1762675658}
+  - component: {fileID: 1762675660}
   m_Layer: 5
   m_Name: UsernameContainer
   m_TagString: Untagged
@@ -3715,6 +3718,32 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1762675656}
   m_CullTransparentMesh: 1
+--- !u!114 &1762675660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762675656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: -50
+    m_Right: 0
+    m_Top: 40
+    m_Bottom: 0
+  m_ChildAlignment: 1
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1766504970
 GameObject:
   m_ObjectHideFlags: 0

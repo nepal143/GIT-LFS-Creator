@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,9 +15,19 @@ public class FetchOrganisationData : MonoBehaviour
     [SerializeField] private GameObject usernamesContainer;
     [SerializeField] private GameObject propertiesContainer;
     [SerializeField] private TextMeshProUGUI textPrefab;
+    [SerializeField] private GameObject deleteButtonPrefab; // Serialized field for delete button
     [SerializeField] private Button buttonPrefab;
     [SerializeField] private GameObject restrictedAccessObject; // Object to disable if not root user
     [SerializeField] private GameObject centeredObject; // The UI element to center horizontally
+
+    [System.Serializable]
+    public class Organisation
+    {
+        public string OrganisationName;
+        public string RootUserName;
+        public List<string> Usernames;
+        public List<string> Properties;
+    }
 
     void Start()
     {
@@ -26,25 +35,41 @@ public class FetchOrganisationData : MonoBehaviour
         currentUsername = PlayerPrefs.GetString("profileUsername"); // Get the current username from PlayerPrefs
         Debug.Log($"Starting fetch for organisation: {organisationName}, current user: {currentUsername}");
 
-        StartCoroutine(GetOrganisationDetails(organisationName));
+        if (!string.IsNullOrEmpty(organisationName))
+        {
+            StartCoroutine(GetOrganisationDetails(organisationName));
+        }
+        else
+        {
+            Debug.LogError("Organisation name is not set in PlayerPrefs.");
+        }
     }
 
     public void OnClickFetchOrganisationData()
     {
         Debug.Log("Fetch Organisation Data button clicked");
-        StartCoroutine(GetOrganisationDetails(organisationName));
+        if (!string.IsNullOrEmpty(organisationName))
+        {
+            StartCoroutine(GetOrganisationDetails(organisationName));
+        }
+        else
+        {
+            Debug.LogError("Organisation name is not set in PlayerPrefs.");
+        }
     }
 
     IEnumerator GetOrganisationDetails(string organisationName)
     {
-        string url = $"{baseUrl}/organisation/organisation/{organisationName}";
+        string url = $"{baseUrl}/organisation/organisation/{UnityWebRequest.EscapeURL(organisationName)}";
         Debug.Log($"Requesting organisation details from URL: {url}");
 
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+
             yield return webRequest.SendWebRequest();
 
-            if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError || webRequest.result == UnityWebRequest.Result.DataProcessingError)
+            if (webRequest.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"Error fetching organisation details: {webRequest.error}");
                 Debug.LogError($"Response Code: {webRequest.responseCode}");
@@ -66,7 +91,6 @@ public class FetchOrganisationData : MonoBehaviour
                 // Disable the restricted access object if the current user is not the root user
                 if (currentUsername != organisation.RootUserName)
                 {
-                    Debug.Log("Current Username: " + currentUsername);
                     Debug.Log("Current user is not the root user. Disabling restricted access object.");
                     if (restrictedAccessObject != null)
                     {
@@ -117,9 +141,9 @@ public class FetchOrganisationData : MonoBehaviour
 
     void DisplayUsernamesAndProperties(List<string> usernames, List<string> properties)
     {
-        if (usernamesContainer == null || propertiesContainer == null || textPrefab == null || buttonPrefab == null)
+        if (usernamesContainer == null || propertiesContainer == null || textPrefab == null || deleteButtonPrefab == null || buttonPrefab == null)
         {
-            Debug.LogError("Containers, text prefab, or button prefab not assigned.");
+            Debug.LogError("Containers, text prefab, delete button prefab, or button prefab not assigned.");
             return;
         }
 
@@ -132,11 +156,33 @@ public class FetchOrganisationData : MonoBehaviour
             foreach (string username in usernames)
             {
                 Debug.Log($"Username: {username}");
-                TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernamesContainer.transform);
-                newTextMeshPro.text = username;
 
+                GameObject usernameRow = new GameObject("UsernameRow");
+                usernameRow.transform.SetParent(usernamesContainer.transform, false);
+                RectTransform usernameRowTransform = usernameRow.AddComponent<RectTransform>();
+                usernameRowTransform.sizeDelta = new Vector2(0, 30); // Adjust height as needed
+                usernameRowTransform.anchorMin = new Vector2(0, 1);  // Top-left corner
+                usernameRowTransform.anchorMax = new Vector2(1, 1);  // Top-right corner
+                usernameRowTransform.pivot = new Vector2(0.5f, 1);   // Top-middle pivot
+
+                // Display the username
+                TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernameRow.transform);
+                newTextMeshPro.text = username;
                 RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
-                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * usernames.IndexOf(username));
+                rt.anchorMin = new Vector2(0, 0.5f);
+                rt.anchorMax = new Vector2(0, 0.5f);
+                rt.pivot = new Vector2(0, 0.5f);
+                rt.anchoredPosition = new Vector2(10, 0); // Adjust position as needed
+
+                // Add delete button next to the username
+                GameObject deleteButtonObject = Instantiate(deleteButtonPrefab, usernameRow.transform);
+                Button deleteButton = deleteButtonObject.GetComponent<Button>();
+                deleteButton.onClick.AddListener(() => OnDeleteButtonClick(username));
+                RectTransform deleteButtonRt = deleteButton.GetComponent<RectTransform>();
+                deleteButtonRt.anchorMin = new Vector2(1, 0.5f);
+                deleteButtonRt.anchorMax = new Vector2(1, 0.5f);
+                deleteButtonRt.pivot = new Vector2(1, 0.5f);
+                deleteButtonRt.anchoredPosition = new Vector2(-10, 0); // Adjust position as needed
             }
         }
         else
@@ -156,7 +202,7 @@ public class FetchOrganisationData : MonoBehaviour
                 newButton.onClick.AddListener(() => OnPropertyButtonClick(property));
 
                 RectTransform rt = newButton.GetComponent<RectTransform>();
-                rt.anchoredPosition = new Vector2(0, rt.sizeDelta.y * properties.IndexOf(property));
+                rt.anchoredPosition = new Vector2(0, -rt.sizeDelta.y * properties.IndexOf(property));
             }
         }
         else
@@ -180,17 +226,50 @@ public class FetchOrganisationData : MonoBehaviour
         PlayerPrefs.SetString("parentPropertyName", propertyName);
         SceneManager.LoadScene("parentDashboard");
     }
+
+    void OnDeleteButtonClick(string username)
+    {
+        Debug.Log($"Delete button clicked for username: {username}");
+        StartCoroutine(DeleteUsername(organisationName, username));
+    }
+
+    public IEnumerator DeleteUsername(string organisationName, string username)
+{
+    string deleteUrl = "https://theserver-tp6r.onrender.com/organisation/delete-username";
+
+    // Create the JSON data object
+    var data = new
+    {
+        organisationName = organisationName,
+        username = username
+    };
+
+    // Serialize the object to JSON
+    string jsonData = JsonUtility.ToJson(data);
+    byte[] postData = System.Text.Encoding.UTF8.GetBytes(jsonData);
+
+    // Create the request
+    UnityWebRequest request = new UnityWebRequest(deleteUrl, "POST");
+    request.uploadHandler = new UploadHandlerRaw(postData);
+    request.downloadHandler = new DownloadHandlerBuffer();
+    request.SetRequestHeader("Content-Type", "application/json");
+
+    // Send the request and wait for the response
+    yield return request.SendWebRequest();
+
+    // Check for errors
+    if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+    {
+        Debug.LogError($"Error deleting username: {request.error}");
+        Debug.LogError($"Response Code: {request.responseCode}");
+        Debug.LogError($"Response: {request.downloadHandler.text}");
+    }
+    else
+    {
+        Debug.Log("Username deleted successfully");
+        Debug.Log($"Response Code: {request.responseCode}");
+        Debug.Log($"Response: {request.downloadHandler.text}");
+    }
 }
 
-[System.Serializable]
-public class Organisation
-{
-    public string OrganisationName;
-    public string RootUserName;
-    public string password;
-    public string phoneNumber;
-    public string verificationCode;
-    public bool isRootVerified;
-    public List<string> Usernames;
-    public List<string> Properties;
 }
