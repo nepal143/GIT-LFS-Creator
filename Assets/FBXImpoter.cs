@@ -109,26 +109,22 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             objModel = new OBJLoader().Load(path);
             Debug.Log("OBJ model loaded successfully.");
             ApplyShaderToModel(objModel, standardShader); // Assign default shader
+
+            // Move the model to the spawn point and tag it
+            objModel.transform.position = spawnPoint.position;
+            objModel.transform.rotation = spawnPoint.rotation;
+            objModel.tag = dollHouseTag;
+
+            Debug.Log($"OBJ model moved to spawn point and tagged with {dollHouseTag}.");
+
+            // Start the upload coroutine and wait for it to finish
+            yield return StartCoroutine(TriggerUploadToServer(path, childPropertyName));
         }
         catch (System.Exception ex)
         {
             Debug.LogError("Error loading OBJ: " + ex.Message);
             HideLoading();
             yield break;
-        }
-
-        if (objModel != null)
-        {
-            GameObject instantiatedModel = Instantiate(objModel, spawnPoint.position, spawnPoint.rotation);
-            instantiatedModel.tag = dollHouseTag;
-            Debug.Log($"OBJ model loaded, moved to spawn point, and tagged with {dollHouseTag}.");
-
-            // Start the upload coroutine and wait for it to finish
-            yield return StartCoroutine(TriggerUploadToServer(path, childPropertyName));
-        }
-        else
-        {
-            Debug.LogError("Failed to load OBJ model from path: " + path);
         }
 
         HideLoading();
