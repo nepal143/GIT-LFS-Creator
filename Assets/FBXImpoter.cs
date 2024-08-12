@@ -116,9 +116,6 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             objModel.tag = dollHouseTag;
 
             Debug.Log($"OBJ model moved to spawn point and tagged with {dollHouseTag}.");
-
-            // Start the upload coroutine and wait for it to finish
-            yield return StartCoroutine(TriggerUploadToServer(path, childPropertyName));
         }
         catch (System.Exception ex)
         {
@@ -126,6 +123,9 @@ public class ModelImporterWithFileBrowser : MonoBehaviour
             HideLoading();
             yield break;
         }
+
+        // Start the upload coroutine and wait for it to finish
+        yield return StartCoroutine(TriggerUploadToServer(path, childPropertyName));
 
         HideLoading();
         // Change screen to DollHouse mode after all tasks are complete

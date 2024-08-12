@@ -2429,7 +2429,7 @@ MonoBehaviour:
   Buttons: {fileID: 1681294729}
   ImageGridContainer: {fileID: 56283779}
   PanaromaCompleteText: {fileID: 1871345510}
-  FinalSaveScene: {fileID: 0}
+  FinalSaveScene: {fileID: 1483559945}
   AddDollHoues: {fileID: 0}
 --- !u!114 &771303172
 MonoBehaviour:
