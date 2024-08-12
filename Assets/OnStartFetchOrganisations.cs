@@ -91,6 +91,7 @@ public class FetchOrganisationData : MonoBehaviour
                 // Disable the restricted access object if the current user is not the root user
                 if (currentUsername != organisation.RootUserName)
                 {
+                    Debug.Log(currentUsername) ; 
                     Debug.Log("Current user is not the root user. Disabling restricted access object.");
                     if (restrictedAccessObject != null)
                     {
@@ -140,78 +141,76 @@ public class FetchOrganisationData : MonoBehaviour
     }
 
     void DisplayUsernamesAndProperties(List<string> usernames, List<string> properties)
+{
+    if (usernamesContainer == null || propertiesContainer == null || textPrefab == null || deleteButtonPrefab == null || buttonPrefab == null)
     {
-        if (usernamesContainer == null || propertiesContainer == null || textPrefab == null || deleteButtonPrefab == null || buttonPrefab == null)
-        {
-            Debug.LogError("Containers, text prefab, delete button prefab, or button prefab not assigned.");
-            return;
-        }
-
-        ClearContainer(usernamesContainer);
-        ClearContainer(propertiesContainer);
-
-        if (usernames != null)
-        {
-            Debug.Log("Displaying usernames:");
-            foreach (string username in usernames)
-            {
-                Debug.Log($"Username: {username}");
-
-                GameObject usernameRow = new GameObject("UsernameRow");
-                usernameRow.transform.SetParent(usernamesContainer.transform, false);
-                RectTransform usernameRowTransform = usernameRow.AddComponent<RectTransform>();
-                usernameRowTransform.sizeDelta = new Vector2(0, 30); // Adjust height as needed
-                usernameRowTransform.anchorMin = new Vector2(0, 1);  // Top-left corner
-                usernameRowTransform.anchorMax = new Vector2(1, 1);  // Top-right corner
-                usernameRowTransform.pivot = new Vector2(0.5f, 1);   // Top-middle pivot
-
-                // Display the username
-                TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernameRow.transform);
-                newTextMeshPro.text = username;
-                RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
-                rt.anchorMin = new Vector2(0, 0.5f);
-                rt.anchorMax = new Vector2(0, 0.5f);
-                rt.pivot = new Vector2(0, 0.5f);
-                rt.anchoredPosition = new Vector2(10, 0); // Adjust position as needed
-
-                // Add delete button next to the username
-                GameObject deleteButtonObject = Instantiate(deleteButtonPrefab, usernameRow.transform);
-                Button deleteButton = deleteButtonObject.GetComponent<Button>();
-                deleteButton.onClick.AddListener(() => OnDeleteButtonClick(username));
-                RectTransform deleteButtonRt = deleteButton.GetComponent<RectTransform>();
-                deleteButtonRt.anchorMin = new Vector2(1, 0.5f);
-                deleteButtonRt.anchorMax = new Vector2(1, 0.5f);
-                deleteButtonRt.pivot = new Vector2(1, 0.5f);
-                deleteButtonRt.anchoredPosition = new Vector2(-10, 0); // Adjust position as needed
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Usernames list is null.");
-        }
-
-        if (properties != null)
-        {
-            Debug.Log("Displaying properties:");
-            foreach (string property in properties)
-            {
-                Debug.Log($"Property: {property}");
-                Button newButton = Instantiate(buttonPrefab, propertiesContainer.transform);
-                newButton.GetComponentInChildren<TextMeshProUGUI>().text = property;
-
-                newButton.onClick.AddListener(() => OnPropertyButtonClick(property));
-
-                RectTransform rt = newButton.GetComponent<RectTransform>();
-                rt.anchoredPosition = new Vector2(0, -rt.sizeDelta.y * properties.IndexOf(property));
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Properties list is null.");
-        }
+        Debug.LogError("Containers, text prefab, delete button prefab, or button prefab not assigned.");
+        return;
     }
 
-    void ClearContainer(GameObject container)
+    ClearContainer(usernamesContainer);
+    ClearContainer(propertiesContainer);
+
+    if (usernames != null && usernames.Count > 0)
+    {
+        Debug.Log("Displaying usernames:");
+        foreach (string username in usernames)
+        {
+            Debug.Log($"Username: {username}");
+
+            GameObject usernameRow = new GameObject("UsernameRow");
+            usernameRow.transform.SetParent(usernamesContainer.transform, false);
+            RectTransform usernameRowTransform = usernameRow.AddComponent<RectTransform>();
+            usernameRowTransform.sizeDelta = new Vector2(0, 30); // Adjust height as needed
+            usernameRowTransform.anchorMin = new Vector2(0, 1);  // Top-left corner
+            usernameRowTransform.anchorMax = new Vector2(1, 1);  // Top-right corner
+            usernameRowTransform.pivot = new Vector2(0.5f, 1);   // Top-middle pivot
+
+            // Display the username
+            TextMeshProUGUI newTextMeshPro = Instantiate(textPrefab, usernameRow.transform);
+            newTextMeshPro.text = username;
+            RectTransform rt = newTextMeshPro.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 0.5f);
+            rt.anchorMax = new Vector2(0, 0.5f);
+            rt.pivot = new Vector2(0, 0.5f);
+            rt.anchoredPosition = new Vector2(10, 0); // Adjust position as needed
+
+            // Add delete button next to the username
+            GameObject deleteButtonObject = Instantiate(deleteButtonPrefab, usernameRow.transform);
+            Button deleteButton = deleteButtonObject.GetComponent<Button>();
+            deleteButton.onClick.AddListener(() => OnDeleteButtonClick(username));
+            RectTransform deleteButtonRt = deleteButton.GetComponent<RectTransform>();
+            deleteButtonRt.anchorMin = new Vector2(1, 0.5f);
+            deleteButtonRt.anchorMax = new Vector2(1, 0.5f);
+            deleteButtonRt.pivot = new Vector2(1, 0.5f);
+            deleteButtonRt.anchoredPosition = new Vector2(-10, 0); // Adjust position as needed
+        }
+    }
+    else
+    {
+        Debug.LogWarning("Usernames list is null or empty.");
+    }
+
+    if (properties != null && properties.Count > 0)
+    {
+        Debug.Log("Displaying properties:");
+        foreach (string property in properties)
+        {
+            Debug.Log($"Property: {property}");
+            Button newButton = Instantiate(buttonPrefab, propertiesContainer.transform);
+            newButton.GetComponentInChildren<TextMeshProUGUI>().text = property;
+
+            newButton.onClick.AddListener(() => OnPropertyButtonClick(property));
+
+            RectTransform rt = newButton.GetComponent<RectTransform>();
+            rt.anchoredPosition = new Vector2(0, -rt.sizeDelta.y * properties.IndexOf(property));
+        }
+    }
+    else
+    {
+        Debug.LogWarning("Properties list is null or empty.");
+    }
+}    void ClearContainer(GameObject container)
     {
         Debug.Log($"Clearing container: {container.name}");
         foreach (Transform child in container.transform)
